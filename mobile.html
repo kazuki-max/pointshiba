@@ -1,0 +1,3209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ポイしば - モバイル</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase SDK ★NEW -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- 2段階認証ライブラリ ★NEW -->
+    <script src="https://cdn.jsdelivr.net/npm/otplib@12.0.1/otplib-browser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Netflix風グラデーション */
+        .netflix-gradient {
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(180deg, transparent 0%, rgba(10,10,10,0.9) 70%, #0a0a0a 100%);
+        }
+        
+        /* カード */
+        .content-card {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        
+        .content-card:active {
+            transform: scale(0.95);
+        }
+        
+        /* 横スクロールコンテナ */
+        .scroll-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 0 16px;
+        }
+        
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scroll-item {
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+        }
+        
+        /* ヒーローセクション */
+        .hero-section {
+            position: relative;
+            height: 60vh;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+        }
+        
+        /* ボトムナビ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: #808080;
+            transition: color 0.3s;
+        }
+        
+        .bottom-nav-item.active {
+            color: #fff;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 24px;
+        }
+        
+        .bottom-nav-item span {
+            font-size: 10px;
+        }
+        
+        /* バッジ */
+        .badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #e50914;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .badge.new {
+            background: #46d369;
+        }
+        
+        /* ポイント表示 */
+        .points-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px;
+        }
+        
+        /* ランクバッジ */
+        .rank-badge-mobile {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .rank-bronze { background: linear-gradient(135deg, #cd7f32 0%, #8b5a00 100%); }
+        .rank-silver { background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%); }
+        .rank-gold { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); color: #333; }
+        .rank-platinum { background: linear-gradient(135deg, #e5e4e2 0%, #b5b5b5 100%); color: #333; }
+        .rank-diamond { background: linear-gradient(135deg, #b9f2ff 0%, #0088ff 100%); }
+        
+        /* カテゴリーチップ */
+        .category-chip {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .category-chip.active {
+            background: #fff;
+            color: #000;
+        }
+        
+        /* 統計カード */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        /* モーダル */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        /* Swiper カスタマイズ */
+        .swiper {
+            width: 100%;
+            padding-bottom: 40px !important;
+        }
+        
+        .swiper-pagination-bullet {
+            background: #fff;
+            opacity: 0.3;
+        }
+        
+        .swiper-pagination-bullet-active {
+            opacity: 1;
+        }
+        
+        /* アニメーション */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.4s ease;
+        }
+        
+        /* アンケート管理タブ */
+        .survey-tab {
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            transition: all 0.3s;
+        }
+        
+        .survey-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        
+        /* プルトゥリフレッシュ */
+        .pull-to-refresh {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #808080;
+            font-size: 14px;
+            transition: top 0.3s;
+        }
+        
+        /* スケルトンローディング */
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* セーフエリア対応 */
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .safe-area-bottom {
+            padding-bottom: calc(70px + env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body>
+    <!-- ホーム画面 -->
+    <div id="homeScreen" class="screen active safe-area-bottom">
+        <!-- ヘッダー -->
+        <header class="fixed top-0 left-0 right-0 z-50 safe-area-top">
+            <div class="netflix-gradient">
+                <div class="px-4 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-gem text-2xl" style="color: #667eea;"></i>
+                        <h1 class="text-xl font-black">ポイしば</h1>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="showScreen('notificationsScreen')" class="relative w-10 h-10 flex items-center justify-center">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                        </button>
+                        <button onclick="showScreen('myPageScreen')" class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
+                            <i class="fas fa-user"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="pt-20">
+            <!-- ヒーローバナー（Swiper） -->
+            <div class="swiper hero-swiper mb-6">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop');">
+                            <div class="hero-content">
+                                <div class="badge new">NEW</div>
+                                <h2 class="text-3xl font-black mb-2">楽天カード発行</h2>
+                                <p class="text-sm opacity-90 mb-4">今だけ15,000pt！年会費永年無料</p>
+                                <div class="flex gap-3">
+                                    <button class="flex-1 bg-white text-black py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                        <i class="fas fa-play"></i> 参加する
+                                    </button>
+                                    <button class="w-12 h-12 bg-gray-800/80 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop');">
+                            <div class="hero-content">
+                                <div class="badge">おすすめ</div>
+                                <h2 class="text-3xl font-black mb-2">口座開設で高額ポイント</h2>
+                                <p class="text-sm opacity-90 mb-4">三井住友銀行で8,000pt獲得</p>
+                                <div class="flex gap-3">
+                                    <button class="flex-1 bg-white text-black py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                        <i class="fas fa-play"></i> 参加する
+                                    </button>
+                                    <button class="w-12 h-12 bg-gray-800/80 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="hero-section" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop');">
+                            <div class="hero-content">
+                                <h2 class="text-3xl font-black mb-2">ショッピングで貯まる</h2>
+                                <p class="text-sm opacity-90 mb-4">購入金額の5%ポイント還元</p>
+                                <div class="flex gap-3">
+                                    <button class="flex-1 bg-white text-black py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                        <i class="fas fa-shopping-cart"></i> 見る
+                                    </button>
+                                    <button class="w-12 h-12 bg-gray-800/80 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+            
+            <!-- ポイント表示 -->
+            <div id="pointsSection" class="hidden">
+                <div class="points-display">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="text-sm opacity-80">保有ポイント</p>
+                            <p id="mobilePoints" class="text-4xl font-black">0</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="mobileRank" class="rank-badge-mobile rank-bronze">
+                                <i class="fas fa-medal"></i>
+                                ブロンズ
+                            </span>
+                            <p class="text-xs opacity-80 mt-2">≈ ¥<span id="mobilePointsYen">0</span></p>
+                        </div>
+                    </div>
+                    <button id="exchangeBtn" class="w-full bg-white text-purple-600 py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-exchange-alt"></i>
+                        ポイント交換
+                    </button>
+                </div>
+            </div>
+            
+            <!-- キャンペーンバナー ★NEW -->
+            <section id="campaignBanner" class="mb-6 px-4" style="display: none;">
+                <!-- JavaScriptで動的生成 -->
+            </section>
+            
+            <!-- クイックアクション ★NEW -->
+            <section class="mb-6">
+                <div class="px-4">
+                    <div class="grid grid-cols-4 gap-3">
+                        <button onclick="showScreen('gachaScreen')" class="flex flex-col items-center gap-2 p-3 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl">
+                            <i class="fas fa-gift text-2xl"></i>
+                            <span class="text-xs font-bold">ガチャ</span>
+                        </button>
+                        <button onclick="showScreen('couponScreen')" class="flex flex-col items-center gap-2 p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
+                            <i class="fas fa-ticket-alt text-2xl"></i>
+                            <span class="text-xs font-bold">クーポン</span>
+                        </button>
+                        <button onclick="showScreen('referralScreen')" class="flex flex-col items-center gap-2 p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                            <i class="fas fa-users text-2xl"></i>
+                            <span class="text-xs font-bold">紹介</span>
+                        </button>
+                        <button onclick="showScreen('rankingScreen')" class="flex flex-col items-center gap-2 p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                            <i class="fas fa-trophy text-2xl"></i>
+                            <span class="text-xs font-bold">ランキング</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 高額案件セクション -->
+            <section class="mb-8">
+                <div class="px-4 mb-3 flex items-center justify-between">
+                    <h3 class="text-lg font-bold">高額案件</h3>
+                    <a href="#" class="text-sm text-purple-400">すべて見る <i class="fas fa-chevron-right text-xs"></i></a>
+                </div>
+                <div class="scroll-container" id="highValueCases">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </section>
+            
+            <!-- 新着案件セクション -->
+            <section class="mb-8">
+                <div class="px-4 mb-3 flex items-center justify-between">
+                    <h3 class="text-lg font-bold">新着案件</h3>
+                    <a href="#" class="text-sm text-purple-400">すべて見る <i class="fas fa-chevron-right text-xs"></i></a>
+                </div>
+                <div class="scroll-container" id="newCases">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </section>
+            
+            <!-- カテゴリー別 -->
+            <section class="mb-8">
+                <div class="px-4 mb-3">
+                    <h3 class="text-lg font-bold mb-3">カテゴリー</h3>
+                    <div class="scroll-container">
+                        <button class="category-chip scroll-item active" data-category="全て">全て</button>
+                        <button class="category-chip scroll-item" data-category="クレジットカード">カード</button>
+                        <button class="category-chip scroll-item" data-category="口座開設">口座</button>
+                        <button class="category-chip scroll-item" data-category="ショッピング">買物</button>
+                        <button class="category-chip scroll-item" data-category="アンケート">アンケート</button>
+                        <button class="category-chip scroll-item" data-category="ゲーム">ゲーム</button>
+                        <button class="category-chip scroll-item" data-category="サービス登録">サービス</button>
+                    </div>
+                </div>
+                <div class="scroll-container" id="categoryFilteredCases">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </section>
+            
+            <!-- おすすめセクション -->
+            <section class="mb-8">
+                <div class="px-4 mb-3 flex items-center justify-between">
+                    <h3 class="text-lg font-bold">おすすめ</h3>
+                </div>
+                <div class="scroll-container" id="featuredCases">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </section>
+            
+            <!-- フッター -->
+            <footer class="mt-12 mb-20 px-4">
+                <!-- アンケート案件セクション -->
+                <section class="mb-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold mb-2">簡単アンケートでポイントGET</h3>
+                        <p class="text-sm text-gray-400">3分で完了！今すぐポイント獲得</p>
+                    </div>
+                    <div class="space-y-3" id="surveySection">
+                        <!-- アンケート案件（JavaScriptで動的生成） -->
+                    </div>
+                </section>
+                
+                <!-- フッターリンク -->
+                <div class="border-t border-gray-800 pt-6">
+                    <div class="flex flex-col gap-3 mb-6">
+                        <a href="help.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                            <i class="fas fa-question-circle"></i>
+                            <span>ヘルプ・FAQ</span>
+                        </a>
+                        <button onclick="showScreen('contactScreen')" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-left">
+                            <i class="fas fa-envelope"></i>
+                            <span>お問い合わせ</span>
+                        </button>
+                    </div>
+                    
+                    <div class="text-center text-xs text-gray-500">
+                        <p class="mb-2">© 2025 ポイしば. All rights reserved.</p>
+                        <div class="flex justify-center gap-4">
+                            <button onclick="showScreen('privacyScreen')" class="hover:text-gray-300">プライバシーポリシー</button>
+                            <button onclick="showScreen('termsScreen')" class="hover:text-gray-300">利用規約</button>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    
+    <!-- マイページ画面 -->
+    <div id="myPageScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                    <i class="fas fa-user text-3xl"></i>
+                </div>
+                <div>
+                    <h2 id="profileName" class="text-2xl font-bold">ゲストユーザー</h2>
+                    <p class="text-sm text-gray-400" id="profileEmail">未登録</p>
+                </div>
+            </div>
+            
+            <!-- 統計カード -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="stat-card text-center">
+                    <p class="text-2xl font-black" id="statTotalPoints">0</p>
+                    <p class="text-xs text-gray-400">累計pt</p>
+                </div>
+                <div class="stat-card text-center">
+                    <p class="text-2xl font-black" id="statCases">0</p>
+                    <p class="text-xs text-gray-400">案件数</p>
+                </div>
+                <div class="stat-card text-center">
+                    <p class="text-2xl font-black" id="statDays">0</p>
+                    <p class="text-xs text-gray-400">連続日</p>
+                </div>
+            </div>
+            
+            <!-- ボーナスステータス ★NEW -->
+            <div id="bonusStatusCard" class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-4 mb-4" style="display: none;">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-gift text-yellow-400"></i>
+                        <h3 class="font-bold">報酬ボーナス</h3>
+                    </div>
+                    <div class="text-2xl font-black text-yellow-400" id="totalBonusRate">+0%</div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">プロフィール完成</span>
+                        <span id="profileBonusStatus" class="text-gray-500">未完了</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">友達紹介 ★NEW</span>
+                        <span id="referralBonusStatus" class="text-gray-500">0人 (0%)</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">電話番号認証</span>
+                        <span id="phoneBonusStatus" class="text-gray-500">未認証</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">本人確認</span>
+                        <span id="identityBonusStatus" class="text-gray-500">未確認</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- メニュー -->
+            <div class="space-y-2">
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('basicProfileEditScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-id-card text-blue-400"></i>
+                        <span>基本情報編集</span>
+                        <span class="text-xs text-gray-500">アイコン・名前</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('profileEditScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-user-edit text-purple-400"></i>
+                        <span>詳細プロフィール編集</span>
+                        <span id="profileIncompleteBadge" class="bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-bold" style="display: none;">+10%</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('historyScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-history text-blue-400"></i>
+                        <span>ポイント履歴</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('favoritesScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-heart text-red-400"></i>
+                        <span>お気に入り</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('achievementsScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-trophy text-yellow-400"></i>
+                        <span>実績</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('statsScreen')">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chart-line text-blue-400"></i>
+                        <span>統計</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                
+                <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="claimDailyBonus()">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-gift text-green-400"></i>
+                        <span>デイリーボーナス</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+            </div>
+            
+            <!-- 設定・その他 -->
+            <div class="mt-6">
+                <h3 class="text-sm font-bold text-gray-400 mb-3 px-2">認証・セキュリティ</h3>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('emailVerificationScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-envelope-open-text text-green-400"></i>
+                            <span>メールアドレス認証</span>
+                            <span id="emailVerifiedBadge" class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-bold">未認証</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('phoneVerificationScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-mobile-alt text-blue-400"></i>
+                            <span>電話番号認証</span>
+                            <span id="phoneVerifiedBadge" class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-bold">未認証</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('twoFactorAuthScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-shield-alt text-purple-400"></i>
+                            <span>2段階認証</span>
+                            <span id="twoFactorBadge" class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-bold">無効</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('loginHistoryScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-history text-blue-400"></i>
+                            <span>ログイン履歴</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 設定・その他 -->
+            <div class="mt-6">
+                <h3 class="text-sm font-bold text-gray-400 mb-3 px-2">設定・その他</h3>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('contactScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-envelope text-blue-400"></i>
+                            <span>お問い合わせ</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('privacyScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-shield-alt text-green-400"></i>
+                            <span>プライバシーポリシー</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl" onclick="showScreen('termsScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-file-contract text-orange-400"></i>
+                            <span>利用規約</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <a href="help.html" class="w-full flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-question-circle text-purple-400"></i>
+                            <span>ヘルプ・FAQ</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 管理者専用 -->
+            <div class="mt-6" id="adminSection" style="display: none;">
+                <h3 class="text-sm font-bold text-gray-400 mb-3 px-2">管理者専用</h3>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center justify-between p-4 bg-red-900/30 border border-red-500/50 rounded-xl" onclick="showScreen('adminScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-cog text-red-400"></i>
+                            <span>案件管理</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-purple-900/30 border border-purple-500/50 rounded-xl" onclick="showScreen('surveyAdminScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-poll text-purple-400"></i>
+                            <span>アンケート管理</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                    
+                    <button class="w-full flex items-center justify-between p-4 bg-blue-900/30 border border-blue-500/50 rounded-xl" onclick="showScreen('adminNotificationScreen')">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-bullhorn text-blue-400"></i>
+                            <span>ユーザー通知管理</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- アカウント操作 -->
+            <div class="mt-8 space-y-3">
+                <button onclick="logout()" class="w-full bg-gray-800 py-4 rounded-xl font-bold text-gray-300 hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    ログアウト
+                </button>
+                
+                <button onclick="confirmDeleteAccount()" class="w-full bg-red-900/30 border border-red-500/50 py-3 rounded-xl font-bold text-red-400 hover:bg-red-900/50 transition-colors">
+                    <i class="fas fa-user-times mr-2"></i>
+                    退会する
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- プロフィール編集画面 ★NEW -->
+    <!-- 基本プロフィール編集画面 ★NEW -->
+    <div id="basicProfileEditScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-24 safe-area-top max-w-full overflow-x-hidden">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">基本情報編集</h2>
+            </div>
+            
+            <!-- 説明 -->
+            <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+                <p class="text-sm text-blue-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    アイコンとユーザー名はランキングに表示されます
+                </p>
+            </div>
+            
+            <!-- 編集フォーム -->
+            <form id="basicProfileEditForm" class="space-y-6">
+                <!-- プロフィール画像選択 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-3">プロフィールアイコン</label>
+                    
+                    <!-- 現在のアイコン表示 -->
+                    <div class="flex justify-center mb-4">
+                        <div id="currentProfileIcon" class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-4xl overflow-hidden">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 画像アップロードセクション ★NEW -->
+                    <div class="mb-6">
+                        <div class="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-xl p-4 mb-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-upload text-green-400"></i>
+                                <h4 class="font-bold text-white text-sm">カスタム画像をアップロード</h4>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-3">
+                                自分の写真やお気に入りの画像を使用できます（最大5MB）
+                            </p>
+                            
+                            <!-- ファイル選択ボタン -->
+                            <input type="file" id="profileImageFile" accept="image/*" class="hidden" onchange="handleProfileImageUpload(event)">
+                            <button type="button" onclick="document.getElementById('profileImageFile').click()" 
+                                    class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-image"></i>
+                                <span id="profileUploadButtonText">画像を選択</span>
+                            </button>
+                            
+                            <!-- アップロード情報表示 -->
+                            <div id="profileImageInfo" class="hidden mt-2">
+                                <p id="profileImageFileName" class="text-xs text-green-400"></p>
+                                <p id="profileImageFileSize" class="text-xs text-gray-500"></p>
+                            </div>
+                            
+                            <!-- エラー表示 -->
+                            <p id="profileImageUploadError" class="text-xs text-red-400 hidden mt-2"></p>
+                            
+                            <!-- クリアボタン -->
+                            <button type="button" id="clearProfileImageBtn" onclick="clearProfileImageUpload()" 
+                                    class="hidden w-full bg-red-600/50 hover:bg-red-600 py-2 rounded-lg text-sm mt-2 transition-colors">
+                                <i class="fas fa-times mr-1"></i> 画像をクリア
+                            </button>
+                        </div>
+                        
+                        <!-- 隠しフィールドに画像データを保存 -->
+                        <input type="hidden" id="uploadedProfileImage" value="">
+                        <input type="hidden" id="profileImageType" value="icon">
+                        
+                        <div class="text-center text-xs text-gray-500 mb-3">
+                            または下からアイコンを選択
+                        </div>
+                    </div>
+                    
+                    <!-- アイコン選択グリッド -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <!-- デフォルトアイコン -->
+                        <button type="button" onclick="selectProfileIcon('fa-user', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors"
+                                data-selected="true">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        
+                        <!-- 動物アイコン -->
+                        <button type="button" onclick="selectProfileIcon('fa-dog', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-dog"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-cat', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-cat"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-fish', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-fish"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-dragon', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-dragon"></i>
+                        </button>
+                        
+                        <!-- スポーツアイコン -->
+                        <button type="button" onclick="selectProfileIcon('fa-basketball', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-basketball"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-futbol', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-futbol"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-baseball', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-baseball"></i>
+                        </button>
+                        
+                        <!-- 趣味アイコン -->
+                        <button type="button" onclick="selectProfileIcon('fa-guitar', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-guitar"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-gamepad', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-gamepad"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-book', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-book"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-camera', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        
+                        <!-- その他アイコン -->
+                        <button type="button" onclick="selectProfileIcon('fa-star', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-heart', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-crown', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-crown"></i>
+                        </button>
+                        <button type="button" onclick="selectProfileIcon('fa-rocket', this)" 
+                                class="profile-icon-option w-full aspect-square rounded-xl bg-gray-800/50 border-2 border-gray-700 flex items-center justify-center text-2xl hover:border-purple-500 transition-colors">
+                            <i class="fas fa-rocket"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 選択されたアイコンを保存 -->
+                    <input type="hidden" id="selectedProfileIcon" value="fa-user">
+                </div>
+                
+                <!-- ユーザー名 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">ユーザー名 *</label>
+                    <input type="text" id="editUsername" required minlength="3" maxlength="20"
+                           class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                           placeholder="3〜20文字">
+                    <p class="text-xs text-gray-500 mt-1">ランキングに表示されます</p>
+                </div>
+                
+                <!-- メールアドレス -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">メールアドレス *</label>
+                    <input type="email" id="editEmail" required
+                           class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                           placeholder="example@email.com">
+                </div>
+                
+                <!-- 保存ボタン -->
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                    変更を保存
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 詳細プロフィール編集画面 (既存) -->
+    <div id="profileEditScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-24 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">詳細プロフィール編集</h2>
+            </div>
+            
+            <!-- インセンティブ情報 -->
+            <div class="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-star text-yellow-400"></i>
+                    <h3 class="font-bold text-white">報酬アップのチャンス</h3>
+                </div>
+                <p class="text-sm text-gray-300 mb-3">
+                    プロフィールを完成させると<span class="text-yellow-400 font-bold">全案件の報酬が10%アップ</span>します！
+                </p>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-black/30 py-2 rounded">
+                        <div class="font-bold text-yellow-400">+10%</div>
+                        <div class="text-gray-400">プロフィール</div>
+                    </div>
+                    <div class="bg-black/30 py-2 rounded">
+                        <div class="font-bold text-gray-500">+10%</div>
+                        <div class="text-gray-400">電話認証</div>
+                    </div>
+                    <div class="bg-black/30 py-2 rounded">
+                        <div class="font-bold text-gray-500">+10%</div>
+                        <div class="text-gray-400">本人確認</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 編集フォーム -->
+            <form id="profileEditForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">性別</label>
+                    <select id="editGender" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                        <option value="男性">男性</option>
+                        <option value="女性">女性</option>
+                        <option value="その他">その他</option>
+                        <option value="回答しない">回答しない</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">年代</label>
+                    <select id="editAgeGroup" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                        <option value="10代">10代</option>
+                        <option value="20代">20代</option>
+                        <option value="30代">30代</option>
+                        <option value="40代">40代</option>
+                        <option value="50代">50代</option>
+                        <option value="60代以上">60代以上</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">職業</label>
+                    <select id="editOccupation" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                        <option value="会社員">会社員</option>
+                        <option value="自営業">自営業</option>
+                        <option value="公務員">公務員</option>
+                        <option value="学生">学生</option>
+                        <option value="主婦・主夫">主婦・主夫</option>
+                        <option value="パート・アルバイト">パート・アルバイト</option>
+                        <option value="無職">無職</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2">お住まいの地域</label>
+                    <select id="editPrefecture" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                        <option value="北海道">北海道</option>
+                        <option value="青森県">青森県</option>
+                        <option value="岩手県">岩手県</option>
+                        <option value="宮城県">宮城県</option>
+                        <option value="秋田県">秋田県</option>
+                        <option value="山形県">山形県</option>
+                        <option value="福島県">福島県</option>
+                        <option value="茨城県">茨城県</option>
+                        <option value="栃木県">栃木県</option>
+                        <option value="群馬県">群馬県</option>
+                        <option value="埼玉県">埼玉県</option>
+                        <option value="千葉県">千葉県</option>
+                        <option value="東京都">東京都</option>
+                        <option value="神奈川県">神奈川県</option>
+                        <option value="新潟県">新潟県</option>
+                        <option value="富山県">富山県</option>
+                        <option value="石川県">石川県</option>
+                        <option value="福井県">福井県</option>
+                        <option value="山梨県">山梨県</option>
+                        <option value="長野県">長野県</option>
+                        <option value="岐阜県">岐阜県</option>
+                        <option value="静岡県">静岡県</option>
+                        <option value="愛知県">愛知県</option>
+                        <option value="三重県">三重県</option>
+                        <option value="滋賀県">滋賀県</option>
+                        <option value="京都府">京都府</option>
+                        <option value="大阪府">大阪府</option>
+                        <option value="兵庫県">兵庫県</option>
+                        <option value="奈良県">奈良県</option>
+                        <option value="和歌山県">和歌山県</option>
+                        <option value="鳥取県">鳥取県</option>
+                        <option value="島根県">島根県</option>
+                        <option value="岡山県">岡山県</option>
+                        <option value="広島県">広島県</option>
+                        <option value="山口県">山口県</option>
+                        <option value="徳島県">徳島県</option>
+                        <option value="香川県">香川県</option>
+                        <option value="愛媛県">愛媛県</option>
+                        <option value="高知県">高知県</option>
+                        <option value="福岡県">福岡県</option>
+                        <option value="佐賀県">佐賀県</option>
+                        <option value="長崎県">長崎県</option>
+                        <option value="熊本県">熊本県</option>
+                        <option value="大分県">大分県</option>
+                        <option value="宮崎県">宮崎県</option>
+                        <option value="鹿児島県">鹿児島県</option>
+                        <option value="沖縄県">沖縄県</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-3">興味関心（複数選択可）</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="ショッピング" class="edit-interest-checkbox">
+                            <span class="text-sm">ショッピング</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="旅行" class="edit-interest-checkbox">
+                            <span class="text-sm">旅行</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="グルメ" class="edit-interest-checkbox">
+                            <span class="text-sm">グルメ</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="美容・健康" class="edit-interest-checkbox">
+                            <span class="text-sm">美容・健康</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="スポーツ" class="edit-interest-checkbox">
+                            <span class="text-sm">スポーツ</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="エンタメ" class="edit-interest-checkbox">
+                            <span class="text-sm">エンタメ</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="ゲーム" class="edit-interest-checkbox">
+                            <span class="text-sm">ゲーム</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                            <input type="checkbox" value="金融・投資" class="edit-interest-checkbox">
+                            <span class="text-sm">金融・投資</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg mt-6">
+                    保存する
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 履歴画面 -->
+    <div id="historyScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">ポイント履歴</h2>
+            </div>
+            
+            <div id="historyList" class="space-y-3">
+                <!-- JavaScriptで動的生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 実績画面 -->
+    <div id="achievementsScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">実績</h2>
+            </div>
+            
+            <div id="achievementsList" class="grid grid-cols-2 gap-3">
+                <!-- JavaScriptで動的生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 統計画面 -->
+    <div id="statsScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">統計</h2>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="stat-card">
+                    <h3 class="font-bold mb-3">ポイント獲得推移</h3>
+                    <div style="height: 200px;">
+                        <canvas id="mobilePointsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3 class="font-bold mb-3">カテゴリー別</h3>
+                    <div style="height: 200px;">
+                        <canvas id="mobileCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 検索画面 ★NEW -->
+    <div id="searchScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <h2 class="text-2xl font-bold mb-6">案件を検索</h2>
+            
+            <!-- 検索ボックス -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="案件名で検索..." 
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 pl-12 text-white">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <!-- フィルター -->
+            <div class="mb-4">
+                <h3 class="text-sm font-bold mb-3 text-gray-400">カテゴリー</h3>
+                <div class="flex flex-wrap gap-2" id="searchCategoryFilters">
+                    <button class="search-category-chip px-4 py-2 bg-gray-800 rounded-full text-sm active" data-category="all">全て</button>
+                    <button class="search-category-chip px-4 py-2 bg-gray-800 rounded-full text-sm" data-category="クレジットカード">カード</button>
+                    <button class="search-category-chip px-4 py-2 bg-gray-800 rounded-full text-sm" data-category="口座開設">口座</button>
+                    <button class="search-category-chip px-4 py-2 bg-gray-800 rounded-full text-sm" data-category="ショッピング">買物</button>
+                    <button class="search-category-chip px-4 py-2 bg-gray-800 rounded-full text-sm" data-category="アンケート">アンケート</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">最小pt</label>
+                    <input type="number" id="minPoints" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" placeholder="0">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">最大pt</label>
+                    <input type="number" id="maxPoints" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" placeholder="99999">
+                </div>
+            </div>
+            
+            <button id="searchBtn" class="w-full bg-purple-600 py-3 rounded-lg font-bold mb-4">
+                検索する
+            </button>
+            
+            <!-- 検索結果 -->
+            <div id="searchResults" class="space-y-3"></div>
+        </div>
+    </div>
+    
+    <!-- お気に入り画面 ★NEW -->
+    <div id="favoritesScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('homeScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">お気に入り</h2>
+            </div>
+            <div id="favoritesList" class="space-y-3"></div>
+        </div>
+    </div>
+    
+    <!-- ランキング画面 ★NEW -->
+    <div id="rankingScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <h2 class="text-2xl font-bold mb-4">ランキング</h2>
+            
+            <div class="flex gap-2 mb-6">
+                <button class="flex-1 py-2 rounded-lg bg-purple-600 font-bold ranking-period-btn" data-period="all">総合</button>
+                <button class="flex-1 py-2 rounded-lg bg-gray-800 font-bold ranking-period-btn" data-period="monthly">月間</button>
+                <button class="flex-1 py-2 rounded-lg bg-gray-800 font-bold ranking-period-btn" data-period="weekly">週間</button>
+            </div>
+            
+            <div id="rankingList" class="space-y-3"></div>
+        </div>
+    </div>
+    
+    <!-- 友達紹介画面 ★NEW -->
+    <div id="referralScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-users text-4xl text-purple-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">友達を招待</h2>
+                <p class="text-gray-400">友達を招待して報酬アップ！</p>
+            </div>
+            
+            <!-- 報酬アップ説明 ★NEW -->
+            <div class="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-rocket text-yellow-400 text-lg"></i>
+                    <h3 class="font-bold text-white">紹介で報酬アップ！</h3>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-300">
+                        <span class="text-yellow-400 font-bold">1人紹介 = +2%</span><br>
+                        <span class="text-yellow-400 font-bold">5人紹介 = +10%</span>（最大）
+                    </p>
+                    <div class="bg-black/30 rounded-lg p-3 mt-3">
+                        <p class="text-xs text-gray-400 mb-2">報酬例（基本1,000pt案件）：</p>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">通常</span>
+                                <span class="text-white">1,000pt</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">1人紹介後</span>
+                                <span class="text-green-400 font-bold">1,020pt (+2%)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">3人紹介後</span>
+                                <span class="text-green-400 font-bold">1,060pt (+6%)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">5人紹介後</span>
+                                <span class="text-yellow-400 font-bold">1,100pt (+10%) ⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">
+                        ✨ 紹介された友達には300pt<br>
+                        💰 あなたには500ptのウェルカムボーナス
+                    </p>
+                </div>
+            </div>
+            
+            <div class="stat-card mb-6">
+                <p class="text-sm text-gray-400 mb-2">あなたの紹介コード</p>
+                <div class="flex items-center justify-between">
+                    <p id="referralCodeDisplay" class="text-2xl font-black tracking-wider">LOADING...</p>
+                    <button onclick="copyReferralCode()" class="bg-purple-600 px-4 py-2 rounded-lg font-bold">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stat-card mb-6">
+                <p class="text-sm text-gray-400 mb-2">紹介リンク</p>
+                <div class="flex items-center gap-2">
+                    <input id="referralLinkDisplay" type="text" readonly class="flex-1 bg-gray-800 px-3 py-2 rounded-lg text-sm text-white">
+                    <button onclick="copyReferralLink()" class="bg-purple-600 px-4 py-2 rounded-lg font-bold">
+                        <i class="fas fa-share"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="stat-card text-center">
+                    <p id="totalReferrals" class="text-2xl font-black">0</p>
+                    <p class="text-xs text-gray-400">紹介人数</p>
+                </div>
+                <div class="stat-card text-center">
+                    <p id="referralBonusRate" class="text-2xl font-black text-yellow-400">+0%</p>
+                    <p class="text-xs text-gray-400">報酬アップ ★NEW</p>
+                </div>
+                <div class="stat-card text-center">
+                    <p id="referralRank" class="text-2xl font-black text-purple-400">-</p>
+                    <p class="text-xs text-gray-400">順位</p>
+                </div>
+            </div>
+            
+            <h3 class="font-bold mb-3">紹介ランキング TOP10</h3>
+            <div id="referralRanking" class="space-y-2"></div>
+        </div>
+    </div>
+    
+    <!-- ガチャ画面 ★NEW -->
+    <div id="gachaScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="text-center mb-8">
+                <div class="w-32 h-32 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i class="fas fa-gift text-6xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-2">デイリーガチャ</h2>
+                <p class="text-gray-400">1日3回まで引けます！</p>
+            </div>
+            
+            <div class="stat-card mb-6 text-center">
+                <p class="text-sm text-gray-400 mb-2">残り回数</p>
+                <p id="gachaRemainingPlays" class="text-4xl font-black">3</p>
+            </div>
+            
+            <button onclick="playGachaBtn()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-xl font-bold text-lg mb-6">
+                <i class="fas fa-dice"></i> ガチャを引く
+            </button>
+            
+            <h3 class="font-bold mb-3">景品一覧</h3>
+            <div class="space-y-2">
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-gray-400">◆ 10pt</span>
+                    <span class="text-sm text-gray-400">40%</span>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-gray-400">◆ 50pt</span>
+                    <span class="text-sm text-gray-400">30%</span>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-blue-400">◆ 100pt</span>
+                    <span class="text-sm text-gray-400">15%</span>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-purple-400">◆ 500pt</span>
+                    <span class="text-sm text-gray-400">10%</span>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-purple-400">◆ 1000pt</span>
+                    <span class="text-sm text-gray-400">4%</span>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <span class="text-yellow-400">★ 5000pt</span>
+                    <span class="text-sm text-gray-400">1%</span>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <h3 class="font-bold mb-3">ガチャ履歴</h3>
+                <div id="gachaHistory" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- クーポン画面 ★NEW -->
+    <div id="couponScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top max-w-full overflow-x-hidden">
+            <h2 class="text-2xl font-bold mb-6">クーポン</h2>
+            
+            <div class="stat-card mb-6">
+                <label class="block text-sm text-gray-400 mb-2">クーポンコードを入力</label>
+                <div class="flex gap-2">
+                    <input type="text" id="couponInput" placeholder="WELCOME2024" 
+                           class="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 uppercase text-white text-sm">
+                    <button onclick="useCouponBtn()" class="bg-purple-600 px-4 py-3 rounded-lg font-bold whitespace-nowrap flex-shrink-0">
+                        使用
+                    </button>
+                </div>
+            </div>
+            
+            <h3 class="font-bold mb-3">利用可能なクーポン</h3>
+            <div class="space-y-3">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="font-bold text-sm break-all">WELCOME2024</span>
+                        <span class="text-green-400 font-black whitespace-nowrap flex-shrink-0">+1000pt</span>
+                    </div>
+                    <p class="text-sm text-gray-400">新規登録ボーナス</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="font-bold text-sm break-all">SPRING500</span>
+                        <span class="text-green-400 font-black whitespace-nowrap flex-shrink-0">+500pt</span>
+                    </div>
+                    <p class="text-sm text-gray-400">春のキャンペーン</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="font-bold text-sm break-all">LUCKY777</span>
+                        <span class="text-green-400 font-black whitespace-nowrap flex-shrink-0">+777pt</span>
+                    </div>
+                    <p class="text-sm text-gray-400">ラッキーボーナス</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- お問い合わせ画面 -->
+    <div id="contactScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">お問い合わせ</h2>
+            </div>
+            
+            <form id="contactForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">お名前 *</label>
+                    <input type="text" id="contactName" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="山田太郎">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">メールアドレス *</label>
+                    <input type="email" id="contactEmail" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="example@email.com">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">お問い合わせ種類 *</label>
+                    <select id="contactCategory" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                        <option value="案件について">案件について</option>
+                        <option value="ポイントについて">ポイントについて</option>
+                        <option value="交換について">交換について</option>
+                        <option value="技術的な問題">技術的な問題</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">お問い合わせ内容 *</label>
+                    <textarea id="contactMessage" required rows="6" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="お問い合わせ内容をご記入ください"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-purple-600 py-4 rounded-lg font-bold">
+                    送信する
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- プライバシーポリシー画面 -->
+    <div id="privacyScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">プライバシーポリシー</h2>
+            </div>
+            
+            <div class="prose prose-invert max-w-none space-y-4 text-sm text-gray-300">
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">1. 個人情報の収集</h3>
+                    <p>PointMaxでは、サービス提供のために以下の個人情報を収集します：</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>ユーザー名・メールアドレス</li>
+                        <li>ポイント獲得履歴</li>
+                        <li>交換履歴</li>
+                        <li>ログイン情報</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">2. 個人情報の利用目的</h3>
+                    <p>収集した個人情報は以下の目的で利用します：</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>サービスの提供・運営</li>
+                        <li>ポイント付与・交換処理</li>
+                        <li>お問い合わせ対応</li>
+                        <li>サービス改善のための分析</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">3. 第三者への提供</h3>
+                    <p>法令に基づく場合を除き、ユーザーの同意なく第三者に個人情報を提供することはありません。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">4. セキュリティ</h3>
+                    <p>個人情報の漏洩・紛失・改ざん等を防止するため、適切な安全管理措置を講じます。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">5. お問い合わせ</h3>
+                    <p>個人情報に関するお問い合わせは、お問い合わせフォームよりご連絡ください。</p>
+                </section>
+                
+                <p class="text-xs text-gray-500 mt-8">制定日: 2025年11月18日</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 利用規約画面 -->
+    <div id="termsScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">利用規約</h2>
+            </div>
+            
+            <div class="prose prose-invert max-w-none space-y-4 text-sm text-gray-300">
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第1条 適用</h3>
+                    <p>本規約は、ポイしば（以下「本サービス」）の利用に関する条件を定めるものです。ユーザーは本規約に同意の上、本サービスを利用するものとします。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第2条 ユーザー登録</h3>
+                    <p>1. 本サービスの利用にはユーザー登録が必要です。</p>
+                    <p>2. 登録情報は正確かつ最新の情報を提供する必要があります。</p>
+                    <p>3. 1人につき1つのアカウントのみ作成可能です。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第3条 ポイントの獲得</h3>
+                    <p>1. ポイントは本サービスが定める案件の達成により獲得できます。</p>
+                    <p>2. 不正な方法によるポイント獲得は禁止します。</p>
+                    <p>3. ポイントに有効期限はありません。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第4条 ポイント交換</h3>
+                    <p>1. ポイントは現金・ギフト券等に交換できます。</p>
+                    <p>2. 交換には最低ポイント数の条件があります。</p>
+                    <p>3. 交換後のキャンセルはできません。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第5条 禁止事項</h3>
+                    <p>以下の行為を禁止します：</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>虚偽の情報登録</li>
+                        <li>複数アカウントの作成</li>
+                        <li>不正なポイント獲得</li>
+                        <li>他のユーザーへの迷惑行為</li>
+                        <li>本サービスの運営妨害</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第6条 アカウント停止</h3>
+                    <p>本規約に違反した場合、予告なくアカウントを停止することがあります。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第7条 免責事項</h3>
+                    <p>本サービスは現状有姿で提供され、完全性・正確性を保証するものではありません。</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2">第8条 規約の変更</h3>
+                    <p>本規約は必要に応じて変更することがあります。変更後の利用をもって同意とみなします。</p>
+                </section>
+                
+                <p class="text-xs text-gray-500 mt-8">制定日: 2025年11月18日</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 管理者画面 -->
+    <div id="adminScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">案件管理</h2>
+            </div>
+            
+            <div class="mb-6">
+                <button onclick="showAddCaseForm()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold flex items-center justify-center gap-2">
+                    <i class="fas fa-plus-circle"></i>
+                    新規案件を追加
+                </button>
+            </div>
+            
+            <!-- 案件追加フォーム -->
+            <div id="addCaseForm" class="hidden space-y-4 mb-8">
+                <h3 class="text-lg font-bold">新規案件情報</h3>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">案件名 *</label>
+                    <input type="text" id="adminCaseTitle" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="楽天カード発行">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">説明 *</label>
+                    <textarea id="adminCaseDescription" required rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="年会費永年無料の楽天カード"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">カテゴリー *</label>
+                        <select id="adminCaseCategory" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="クレジットカード">クレジットカード</option>
+                            <option value="口座開設">口座開設</option>
+                            <option value="ショッピング">ショッピング</option>
+                            <option value="アンケート">アンケート</option>
+                            <option value="ゲーム">ゲーム</option>
+                            <option value="サービス登録">サービス登録</option>
+                            <option value="アプリ">アプリ</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">ポイント *</label>
+                        <input type="number" id="adminCasePoints" required min="1" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="15000">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">所要時間</label>
+                        <input type="text" id="adminCaseTime" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="5分">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">難易度</label>
+                        <select id="adminCaseDifficulty" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="簡単">簡単</option>
+                            <option value="普通">普通</option>
+                            <option value="やや難しい">やや難しい</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">画像アップロード</label>
+                    <div class="space-y-3">
+                        <!-- ファイル選択ボタン -->
+                        <div class="relative">
+                            <input type="file" id="adminCaseImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <button type="button" onclick="document.getElementById('adminCaseImageFile').click()" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-upload"></i>
+                                <span id="uploadButtonText">画像を選択</span>
+                            </button>
+                        </div>
+                        
+                        <!-- プレビュー表示 -->
+                        <div id="imagePreviewContainer" class="hidden">
+                            <div class="relative rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
+                                <img id="imagePreview" src="" alt="プレビュー" class="w-full h-48 object-contain">
+                                <button type="button" onclick="clearImageUpload()" class="absolute top-2 right-2 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <p id="imageFileName" class="text-xs text-gray-400 mt-2"></p>
+                            <p id="imageFileSize" class="text-xs text-gray-500"></p>
+                        </div>
+                        
+                        <!-- エラー表示 -->
+                        <p id="imageUploadError" class="text-xs text-red-400 hidden"></p>
+                    </div>
+                    
+                    <!-- 隠しフィールドに画像データを保存 -->
+                    <input type="hidden" id="adminCaseImage" value="">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">案件URL *</label>
+                    <input type="url" id="adminCaseUrl" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="https://example.com">
+                </div>
+                
+                <div class="flex gap-3">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="adminCaseNew" class="w-5 h-5 rounded bg-gray-800 border-gray-700">
+                        <span class="text-sm">新着案件</span>
+                    </label>
+                    
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="adminCaseFeatured" class="w-5 h-5 rounded bg-gray-800 border-gray-700">
+                        <span class="text-sm">おすすめ案件</span>
+                    </label>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="saveNewCase()" class="flex-1 bg-purple-600 py-3 rounded-lg font-bold">
+                        保存
+                    </button>
+                    <button onclick="hideAddCaseForm()" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold">
+                        キャンセル
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 既存案件一覧 -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">登録済み案件</h3>
+                <div id="adminCasesList" class="space-y-3">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 管理者通知送信画面 ★NEW -->
+    <div id="adminNotificationScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-24 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold flex-1">ユーザー通知管理</h2>
+                <!-- デバッグボタン（開発時のみ） -->
+                <button onclick="debugAdminNotification()" class="px-3 py-1 bg-red-600 text-white text-xs rounded-full">
+                    DEBUG
+                </button>
+            </div>
+            
+            <!-- タブメニュー -->
+            <div class="flex gap-2 mb-6 overflow-x-auto">
+                <button onclick="switchAdminNotifTab('send')" id="adminNotifTabSend" class="admin-notif-tab active px-4 py-2 rounded-lg font-bold whitespace-nowrap bg-purple-600">
+                    通知送信
+                </button>
+                <button onclick="switchAdminNotifTab('history')" id="adminNotifTabHistory" class="admin-notif-tab px-4 py-2 rounded-lg font-bold whitespace-nowrap bg-gray-700">
+                    送信履歴
+                </button>
+                <button onclick="switchAdminNotifTab('templates')" id="adminNotifTabTemplates" class="admin-notif-tab px-4 py-2 rounded-lg font-bold whitespace-nowrap bg-gray-700">
+                    テンプレート
+                </button>
+            </div>
+            
+            <!-- 通知送信タブ -->
+            <div id="adminNotifSendTab" class="admin-notif-tab-content">
+                <form id="adminNotificationForm" class="space-y-4">
+                    <!-- 送信先選択 -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-400 mb-3">送信先 *</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg cursor-pointer">
+                                <input type="radio" name="targetType" value="all" checked class="w-5 h-5">
+                                <div>
+                                    <div class="font-bold">全ユーザー</div>
+                                    <div class="text-xs text-gray-400">すべてのユーザーに一斉送信</div>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg cursor-pointer">
+                                <input type="radio" name="targetType" value="conditional" class="w-5 h-5">
+                                <div>
+                                    <div class="font-bold">条件指定</div>
+                                    <div class="text-xs text-gray-400">ランク・登録日等で絞り込み</div>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg cursor-pointer">
+                                <input type="radio" name="targetType" value="individual" class="w-5 h-5">
+                                <div>
+                                    <div class="font-bold">個別ユーザー</div>
+                                    <div class="text-xs text-gray-400">特定のユーザーを選択</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 条件指定（conditional選択時のみ表示） -->
+                    <div id="conditionalSection" class="hidden space-y-3">
+                        <label class="block text-sm text-gray-400">条件（例: rank=ゴールド、points>10000）</label>
+                        <input type="text" id="notifCondition" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="rank=ゴールド">
+                        <p class="text-xs text-gray-500">
+                            使用例：rank=ゴールド、points>5000、consecutive_login_days>=7
+                        </p>
+                    </div>
+                    
+                    <!-- 個別ユーザー（individual選択時のみ表示） -->
+                    <div id="individualSection" class="hidden space-y-3">
+                        <label class="block text-sm text-gray-400">ユーザーID（カンマ区切り）</label>
+                        <textarea id="notifUserIds" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="uuid-1234, uuid-5678"></textarea>
+                    </div>
+                    
+                    <!-- 通知タイプ -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">通知タイプ *</label>
+                        <select id="notifType" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="system">システム通知</option>
+                            <option value="announcement">お知らせ</option>
+                            <option value="reward">報酬通知</option>
+                            <option value="warning">警告</option>
+                            <option value="achievement">達成通知</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 優先度 -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">優先度 *</label>
+                        <select id="notifPriority" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="low">低</option>
+                            <option value="normal" selected>通常</option>
+                            <option value="high">高</option>
+                            <option value="urgent">緊急</option>
+                        </select>
+                    </div>
+                    
+                    <!-- タイトル -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">タイトル *</label>
+                        <input type="text" id="notifTitle" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="重要なお知らせ">
+                    </div>
+                    
+                    <!-- メッセージ -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">メッセージ *</label>
+                        <textarea id="notifMessage" required rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="メッセージ本文を入力してください"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">変数: {username}, {points}, {rank}</p>
+                    </div>
+                    
+                    <!-- アイコン -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">アイコン</label>
+                        <select id="notifIcon" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="fa-bell">🔔 ベル</option>
+                            <option value="fa-bullhorn">📢 メガホン</option>
+                            <option value="fa-gift">🎁 ギフト</option>
+                            <option value="fa-exclamation-triangle">⚠️ 警告</option>
+                            <option value="fa-info-circle">ℹ️ 情報</option>
+                            <option value="fa-star">⭐ スター</option>
+                            <option value="fa-trophy">🏆 トロフィー</option>
+                        </select>
+                    </div>
+                    
+                    <!-- リンク先 -->
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">リンク先画面（オプション）</label>
+                        <select id="notifLinkScreen" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                            <option value="">なし</option>
+                            <option value="homeScreen">ホーム</option>
+                            <option value="casesScreen">案件一覧</option>
+                            <option value="surveysScreen">アンケート</option>
+                            <option value="myPageScreen">マイページ</option>
+                            <option value="historyScreen">ポイント履歴</option>
+                            <option value="exchangeScreen">ポイント交換</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 予約送信 -->
+                    <div>
+                        <label class="flex items-center gap-2 mb-3">
+                            <input type="checkbox" id="notifScheduled" class="w-5 h-5 rounded bg-gray-800 border-gray-700">
+                            <span class="text-sm font-bold">予約送信</span>
+                        </label>
+                        <input type="datetime-local" id="notifScheduledTime" class="hidden w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                    </div>
+                    
+                    <!-- 送信ボタン -->
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="previewAdminNotification()" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold">
+                            プレビュー
+                        </button>
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg font-bold">
+                            送信
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 送信履歴タブ -->
+            <div id="adminNotifHistoryTab" class="admin-notif-tab-content hidden">
+                <div id="adminNotifHistoryList" class="space-y-3">
+                    <!-- JavaScriptで動的生成 -->
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3"></i>
+                        <p>読み込み中...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- テンプレートタブ -->
+            <div id="adminNotifTemplatesTab" class="admin-notif-tab-content hidden">
+                <div class="mb-4">
+                    <button onclick="showCreateTemplateForm()" class="w-full bg-purple-600 py-3 rounded-lg font-bold">
+                        <i class="fas fa-plus mr-2"></i>
+                        新規テンプレート作成
+                    </button>
+                </div>
+                
+                <div id="adminNotifTemplatesList" class="space-y-3">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 通知画面 ★NEW -->
+    <div id="notificationsScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('homeScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">通知</h2>
+                <button onclick="markAllNotificationsRead()" class="ml-auto text-sm text-purple-400">
+                    すべて既読
+                </button>
+            </div>
+            
+            <div id="notificationsList" class="space-y-3">
+                <!-- JavaScriptで動的生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- アンケート管理画面 ★NEW -->
+    <div id="surveyAdminScreen" class="screen hidden safe-area-bottom">
+        <div class="px-4 pt-6 pb-4 safe-area-top">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold">アンケート管理</h2>
+            </div>
+            
+            <!-- タブメニュー -->
+            <div class="flex gap-2 mb-6 overflow-x-auto">
+                <button onclick="switchSurveyTab('create')" id="surveyTabCreate" class="survey-tab active px-4 py-2 rounded-lg font-bold whitespace-nowrap">
+                    自社作成
+                </button>
+                <button onclick="switchSurveyTab('orders')" id="surveyTabOrders" class="survey-tab px-4 py-2 rounded-lg font-bold whitespace-nowrap">
+                    依頼管理
+                </button>
+                <button onclick="switchSurveyTab('results')" id="surveyTabResults" class="survey-tab px-4 py-2 rounded-lg font-bold whitespace-nowrap">
+                    結果分析
+                </button>
+            </div>
+            
+            <!-- 自社作成タブ -->
+            <div id="surveyCreateTab" class="survey-tab-content">
+                <div class="mb-6">
+                    <button onclick="showCreateSurveyForm()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        自社アンケートを作成
+                    </button>
+                </div>
+                
+                <!-- アンケート作成フォーム -->
+                <div id="createSurveyForm" class="hidden space-y-4 mb-8 bg-gray-800/50 p-4 rounded-xl">
+                    <h3 class="text-lg font-bold mb-4">アンケート基本情報</h3>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">タイトル *</label>
+                        <input type="text" id="internalSurveyTitle" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="新商品に関するアンケート">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">説明 *</label>
+                        <textarea id="internalSurveyDescription" required rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="アンケートの目的や内容"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">目標回答数 *</label>
+                            <input type="number" id="internalTargetResponses" required min="10" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="100">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">付与ポイント *</label>
+                            <input type="number" id="internalPointsPerResponse" required min="10" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white" placeholder="50">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">所要時間 *</label>
+                            <select id="internalEstimatedTime" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                                <option value="1-3分">1-3分</option>
+                                <option value="3-5分">3-5分</option>
+                                <option value="5-10分">5-10分</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">カテゴリー *</label>
+                            <select id="internalCategory" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                                <option value="商品・サービス">商品・サービス</option>
+                                <option value="マーケティング">マーケティング</option>
+                                <option value="顧客満足度">顧客満足度</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">開始日 *</label>
+                            <input type="date" id="internalStartDate" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">終了日 *</label>
+                            <input type="date" id="internalEndDate" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        </div>
+                    </div>
+                    
+                    <!-- 認証設定 ★NEW -->
+                    <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                        <h4 class="font-bold mb-3 text-blue-300">参加条件設定</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="internalRequiresEmailVerification" class="w-5 h-5 rounded">
+                                <div>
+                                    <span class="text-sm">メールアドレス認証を必須にする</span>
+                                    <p class="text-xs text-gray-400">回答者の信頼性が向上します</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer opacity-50">
+                                <input type="checkbox" id="internalRequiresPhoneVerification" class="w-5 h-5 rounded" disabled>
+                                <div>
+                                    <span class="text-sm">電話番号認証を必須にする</span>
+                                    <p class="text-xs text-gray-400">（近日公開予定）</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 質問追加セクション -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold">質問設定</h4>
+                            <button type="button" onclick="addInternalQuestion()" class="bg-purple-600 px-4 py-2 rounded-lg text-sm font-bold">
+                                <i class="fas fa-plus mr-1"></i> 質問追加
+                            </button>
+                        </div>
+                        
+                        <div id="internalQuestionsList" class="space-y-3">
+                            <!-- 質問が動的に追加される -->
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="hideCreateSurveyForm()" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold">
+                            キャンセル
+                        </button>
+                        <button type="button" onclick="saveInternalSurvey()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg font-bold">
+                            作成
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- アクティブなアンケート一覧 -->
+                <div id="activeSurveysList" class="space-y-3">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+            
+            <!-- 依頼管理タブ -->
+            <div id="surveyOrdersTab" class="survey-tab-content hidden">
+                <div class="space-y-3" id="surveyOrdersList">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+            
+            <!-- 結果分析タブ -->
+            <div id="surveyResultsTab" class="survey-tab-content hidden">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">分析するアンケートを選択</label>
+                    <select id="surveyResultSelect" onchange="loadSurveyResults(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white">
+                        <option value="">選択してください</option>
+                    </select>
+                </div>
+                
+                <div id="surveyResultsContent" class="space-y-4">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ログイン画面 ★NEW -->
+    <div id="loginScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-purple-900 via-gray-900 to-black">
+            <div class="w-full max-w-md">
+                <!-- ロゴ -->
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-gem text-4xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-black mb-2">ポイしば</h1>
+                    <p class="text-gray-400">ログインしてポイントを貯めよう</p>
+                </div>
+                
+                <!-- ログインフォーム -->
+                <form id="loginForm" class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">ユーザー名またはメールアドレス</label>
+                        <input type="text" id="loginUsername" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="username">
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm text-gray-400">パスワード</label>
+                            <button type="button" onclick="showScreen('passwordResetScreen')" class="text-xs text-purple-400 hover:text-purple-300">
+                                パスワードを忘れた方
+                            </button>
+                        </div>
+                        <input type="password" id="loginPassword" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="••••••••">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                        ログイン
+                    </button>
+                </form>
+                
+                <!-- ソーシャルログイン ★NEW -->
+                <div class="my-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-700"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-gray-900 text-gray-400">または</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 space-y-3">
+                        <!-- Google ログイン -->
+                        <button onclick="handleSocialLogin('google')" 
+                                class="w-full flex items-center justify-center gap-3 bg-white text-gray-900 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>Google でログイン</span>
+                        </button>
+                        
+                        <!-- LINE ログイン -->
+                        <button onclick="handleSocialLogin('line')" 
+                                class="w-full flex items-center justify-center gap-3 bg-[#06C755] text-white py-3 rounded-lg font-bold hover:bg-[#05b34a] transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                            </svg>
+                            <span>LINE でログイン</span>
+                        </button>
+                        
+                        <!-- X (Twitter) ログイン -->
+                        <button onclick="handleSocialLogin('twitter')" 
+                                class="w-full flex items-center justify-center gap-3 bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-900 transition-colors border border-gray-700">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>X でログイン</span>
+                        </button>
+                        
+                        <!-- Facebook ログイン -->
+                        <button onclick="handleSocialLogin('facebook')" 
+                                class="w-full flex items-center justify-center gap-3 bg-[#1877F2] text-white py-3 rounded-lg font-bold hover:bg-[#1664d8] transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Facebook でログイン</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 新規登録リンク -->
+                <div class="text-center">
+                    <p class="text-gray-400 mb-3">アカウントをお持ちでない方</p>
+                    <button onclick="showScreen('registerScreen')" class="w-full bg-gray-800/50 border border-gray-700 py-3 rounded-lg font-bold">
+                        新規登録
+                    </button>
+                </div>
+                
+                <!-- デモアカウント情報 -->
+                <div class="mt-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                    <p class="text-xs text-blue-400 mb-2">
+                        <i class="fas fa-info-circle"></i> デモアカウント
+                    </p>
+                    <div class="text-xs text-gray-400 space-y-1">
+                        <p>一般ユーザー: <span class="text-white">demo</span> / <span class="text-white">demo</span></p>
+                        <p>管理者: <span class="text-white">admin</span> / <span class="text-white">admin</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- パスワードリセット画面 ★NEW -->
+    <div id="passwordResetScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-purple-900 via-gray-900 to-black">
+            <div class="w-full max-w-md">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showScreen('loginScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold">パスワードリセット</h2>
+                        <p class="text-sm text-gray-400 mt-1">登録済みのメールアドレスを入力</p>
+                    </div>
+                </div>
+                
+                <!-- 説明 -->
+                <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+                    <p class="text-sm text-blue-300">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        登録されたメールアドレス宛に、パスワードリセット用のコードを送信します（デモ環境では即座に表示されます）。
+                    </p>
+                </div>
+                
+                <!-- リセットフォーム -->
+                <form id="passwordResetForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">メールアドレス</label>
+                        <input type="email" id="resetEmail" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="example@email.com">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                        リセットコードを送信
+                    </button>
+                </form>
+                
+                <!-- リセットコード入力フォーム（デモ用・送信後に表示） -->
+                <div id="resetCodeSection" class="hidden mt-6">
+                    <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-green-300 mb-2">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            リセットコードを送信しました
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            デモ環境用コード: <span id="demoResetCode" class="text-yellow-400 font-bold text-lg"></span>
+                        </p>
+                    </div>
+                    
+                    <form id="passwordResetConfirmForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">リセットコード</label>
+                            <input type="text" id="resetCode" required 
+                                   class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white uppercase"
+                                   placeholder="XXXXXX" maxlength="6">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">新しいパスワード</label>
+                            <input type="password" id="newPassword" required 
+                                   class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                                   placeholder="••••••••" minlength="8"
+                                   oninput="checkPasswordStrength('newPassword', 'newPasswordStrength')">
+                            
+                            <!-- パスワード強度インジケーター ★NEW -->
+                            <div id="newPasswordStrength" class="mt-3 hidden">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs text-gray-400">パスワード強度</span>
+                                    <span id="newPasswordStrengthLabel" class="text-xs font-bold"></span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
+                                    <div id="newPasswordStrengthBar" class="h-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <div class="space-y-1 text-xs">
+                                    <div id="resetReq1" class="flex items-center gap-2 text-gray-500">
+                                        <i class="fas fa-circle text-[8px]"></i>
+                                        <span>8文字以上</span>
+                                    </div>
+                                    <div id="resetReq2" class="flex items-center gap-2 text-gray-500">
+                                        <i class="fas fa-circle text-[8px]"></i>
+                                        <span>大文字を含む (A-Z)</span>
+                                    </div>
+                                    <div id="resetReq3" class="flex items-center gap-2 text-gray-500">
+                                        <i class="fas fa-circle text-[8px]"></i>
+                                        <span>小文字を含む (a-z)</span>
+                                    </div>
+                                    <div id="resetReq4" class="flex items-center gap-2 text-gray-500">
+                                        <i class="fas fa-circle text-[8px]"></i>
+                                        <span>数字を含む (0-9)</span>
+                                    </div>
+                                    <div id="resetReq5" class="flex items-center gap-2 text-gray-500">
+                                        <i class="fas fa-circle text-[8px]"></i>
+                                        <span>特殊文字を含む (!@#$%など) - 推奨</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">新しいパスワード（確認）</label>
+                            <input type="password" id="newPasswordConfirm" required 
+                                   class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                                   placeholder="••••••••">
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-lg font-bold text-lg">
+                            パスワードを変更する
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- メールアドレス認証画面 ★NEW -->
+    <div id="emailVerificationScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-green-900 via-gray-900 to-black safe-area-top safe-area-bottom">
+            <div class="w-full max-w-md">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold">メールアドレス認証</h2>
+                        <p class="text-sm text-gray-400 mt-1">アンケート参加に必要です</p>
+                    </div>
+                </div>
+                
+                <!-- 認証済み表示 -->
+                <div id="emailVerifiedSection" class="hidden">
+                    <div class="bg-green-900/20 border border-green-500/30 rounded-xl p-6 text-center">
+                        <i class="fas fa-check-circle text-green-400 text-5xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-green-400 mb-2">認証済み</h3>
+                        <p class="text-sm text-gray-300 mb-4">
+                            メールアドレスは認証済みです
+                        </p>
+                        <p class="text-xs text-gray-400" id="verifiedEmailDisplay"></p>
+                        <button onclick="showScreen('myPageScreen')" class="mt-4 w-full bg-green-600 py-3 rounded-lg font-bold">
+                            マイページに戻る
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 未認証表示 -->
+                <div id="emailUnverifiedSection">
+                    <!-- 説明 -->
+                    <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-6">
+                        <p class="text-sm text-blue-300 mb-3">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            メールアドレス認証を完了すると：
+                        </p>
+                        <ul class="text-xs text-gray-300 space-y-1 ml-4">
+                            <li>✅ アンケートに参加できます</li>
+                            <li>✅ クライアント直接アンケートに参加できます（電話番号認証も必要）</li>
+                            <li>✅ セキュリティが向上します</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- メール送信フォーム -->
+                    <form id="emailVerificationForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">登録済みメールアドレス</label>
+                            <input type="email" id="verifyEmail" required 
+                                   class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                                   placeholder="example@email.com" readonly>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-lg font-bold text-lg">
+                            認証コードを送信
+                        </button>
+                    </form>
+                    
+                    <!-- 認証コード入力フォーム（送信後に表示） -->
+                    <div id="emailVerifyCodeSection" class="hidden mt-6">
+                        <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-green-300 mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                認証コードを送信しました
+                            </p>
+                            <p class="text-xs text-gray-400">
+                                デモ環境用コード: <span id="demoVerifyCode" class="text-yellow-400 font-bold text-lg"></span>
+                            </p>
+                        </div>
+                        
+                        <form id="emailVerificationConfirmForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">認証コード</label>
+                                <input type="text" id="verifyCode" required 
+                                       class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white uppercase"
+                                       placeholder="XXXXXX" maxlength="6">
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-lg font-bold text-lg">
+                                認証する
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 電話番号認証画面 ★NEW -->
+    <div id="phoneVerificationScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-blue-900 via-gray-900 to-black">
+            <div class="w-full max-w-md">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold">電話番号認証</h2>
+                        <p class="text-sm text-gray-400 mt-1">SMS認証でアカウントを保護</p>
+                    </div>
+                </div>
+                
+                <!-- 認証済みセクション -->
+                <div id="phoneVerifiedSection" class="hidden">
+                    <div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-6 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">認証済み</h3>
+                                <p class="text-sm text-gray-400">電話番号が認証されています</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-blue-300 mb-3">
+                            <i class="fas fa-mobile-alt mr-2"></i>
+                            認証済み電話番号: <span id="verifiedPhoneDisplay" class="font-bold"></span>
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            ✨ プロフィールボーナス +10% が適用されています
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-800/50 rounded-xl p-4">
+                        <h4 class="font-bold mb-2">認証済みの特典</h4>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>✅ ポイント報酬 +10%</li>
+                            <li>✅ 全てのアンケートに参加可能</li>
+                            <li>✅ セキュリティ強化</li>
+                            <li>✅ アカウント復旧が簡単</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 未認証セクション -->
+                <div id="phoneUnverifiedSection">
+                    <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+                        <h3 class="font-bold mb-2 text-blue-300">🎁 電話番号認証でボーナスGET</h3>
+                        <p class="text-sm text-gray-400 mb-3">
+                            認証完了で<span class="text-blue-400 font-bold">全ての報酬が+10%</span>にアップ！
+                        </p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>✅ 全てのアンケートに参加できます</li>
+                            <li>✅ クライアント直接アンケートにも参加可能</li>
+                            <li>✅ アカウントのセキュリティが向上します</li>
+                            <li>✅ 不正利用を防止できます</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 電話番号入力フォーム -->
+                    <form id="phoneVerificationForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">電話番号</label>
+                            <div class="flex gap-2">
+                                <input type="text" value="+81" readonly
+                                       class="w-16 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-3 text-white text-center">
+                                <input type="tel" id="phoneNumber" required 
+                                       class="flex-1 bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                                       placeholder="90 1234 5678"
+                                       pattern="[0-9\s]+"
+                                       maxlength="13">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                例: 90 1234 5678（ハイフン不要、最初の0は除く）
+                            </p>
+                        </div>
+                        
+                        <!-- reCAPTCHA コンテナ -->
+                        <div id="recaptcha-container"></div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 py-4 rounded-lg font-bold text-lg">
+                            SMS認証コードを送信
+                        </button>
+                    </form>
+                    
+                    <!-- 認証コード入力フォーム（送信後に表示） -->
+                    <div id="phoneVerifyCodeSection" class="hidden mt-6">
+                        <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-blue-300 mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                SMSを送信しました
+                            </p>
+                            <p class="text-xs text-gray-400">
+                                入力した電話番号にSMSで6桁の認証コードを送信しました。
+                            </p>
+                        </div>
+                        
+                        <form id="phoneVerificationConfirmForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">認証コード（6桁）</label>
+                                <input type="text" id="phoneVerifyCode" required 
+                                       class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-widest"
+                                       placeholder="000000"
+                                       maxlength="6"
+                                       pattern="[0-9]{6}">
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 py-4 rounded-lg font-bold text-lg">
+                                認証する
+                            </button>
+                            
+                            <button type="button" onclick="resendPhoneSMS()" 
+                                    class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-redo mr-2"></i>
+                                SMSを再送信
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2段階認証設定画面 ★NEW -->
+    <div id="twoFactorAuthScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-purple-900 via-gray-900 to-black">
+            <div class="w-full max-w-md">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold">2段階認証</h2>
+                        <p class="text-sm text-gray-400 mt-1">TOTPアプリで保護</p>
+                    </div>
+                </div>
+                
+                <!-- 2段階認証有効セクション -->
+                <div id="twoFactorEnabledSection" class="hidden">
+                    <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">有効</h3>
+                                <p class="text-sm text-gray-400">2段階認証が有効です</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-purple-300 mb-3">
+                            <i class="fas fa-mobile-alt mr-2"></i>
+                            認証アプリと連携済み
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            最終使用: <span id="twoFactorLastUsed">未使用</span>
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-800/50 rounded-xl p-4 mb-6">
+                        <h4 class="font-bold mb-2">有効化済みの保護</h4>
+                        <ul class="text-sm text-gray-400 space-y-1">
+                            <li>🔐 ログイン時に6桁コードを要求</li>
+                            <li>🛡️ 不正アクセスを防止</li>
+                            <li>📱 認証アプリで簡単認証</li>
+                            <li>💾 バックアップコードで復旧可能</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button onclick="showBackupCodes()" class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg transition-colors">
+                            <i class="fas fa-key mr-2"></i>
+                            バックアップコードを確認
+                        </button>
+                        
+                        <button onclick="disableTwoFactor()" class="w-full bg-red-900/30 border border-red-500/50 py-3 rounded-lg text-red-400 hover:bg-red-900/50 transition-colors">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            2段階認証を無効化
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 2段階認証無効セクション -->
+                <div id="twoFactorDisabledSection">
+                    <div class="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 mb-6">
+                        <h3 class="font-bold mb-2 text-purple-300">🔐 2段階認証でセキュリティ強化</h3>
+                        <p class="text-sm text-gray-400 mb-3">
+                            Google Authenticatorなどの認証アプリを使用して、ログイン時の<span class="text-purple-400 font-bold">セキュリティを大幅に向上</span>できます。
+                        </p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>✅ パスワード盗難でも不正ログイン防止</li>
+                            <li>✅ 30秒ごとに変わる6桁コードで認証</li>
+                            <li>✅ 完全無料・オフラインでも動作</li>
+                            <li>✅ 最高レベルのセキュリティ</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-gray-800/50 rounded-lg p-4 mb-6">
+                        <h4 class="font-bold mb-3 text-sm">推奨認証アプリ</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-3">
+                                <i class="fab fa-google text-blue-400"></i>
+                                <span>Google Authenticator</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i class="fab fa-microsoft text-blue-400"></i>
+                                <span>Microsoft Authenticator</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-shield-alt text-green-400"></i>
+                                <span>Authy</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="enableTwoFactor()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                        2段階認証を有効化
+                    </button>
+                </div>
+                
+                <!-- QRコード表示セクション（有効化中のみ表示） -->
+                <div id="twoFactorSetupSection" class="hidden">
+                    <div class="bg-gray-800/50 rounded-xl p-6 mb-6">
+                        <h3 class="font-bold mb-4 text-center">認証アプリでスキャン</h3>
+                        
+                        <!-- QRコード -->
+                        <div class="flex justify-center mb-4">
+                            <div id="qrcodeCanvas" class="bg-white p-4 rounded-lg"></div>
+                        </div>
+                        
+                        <!-- 秘密鍵（手動入力用） -->
+                        <div class="bg-gray-900/50 rounded-lg p-3 mb-4">
+                            <p class="text-xs text-gray-400 mb-1">または、手動で入力:</p>
+                            <p id="secretKeyDisplay" class="text-sm font-mono break-all text-center text-blue-400"></p>
+                        </div>
+                        
+                        <div class="text-xs text-gray-400 space-y-1">
+                            <p>1. 認証アプリを起動</p>
+                            <p>2. QRコードをスキャン</p>
+                            <p>3. アプリに表示された6桁コードを入力</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 認証コード確認 -->
+                    <form id="twoFactorVerifyForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">認証コード（6桁）</label>
+                            <input type="text" id="twoFactorCode" required 
+                                   class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-widest"
+                                   placeholder="000000"
+                                   maxlength="6"
+                                   pattern="[0-9]{6}">
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                            確認して有効化
+                        </button>
+                        
+                        <button type="button" onclick="cancelTwoFactorSetup()" 
+                                class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg transition-colors">
+                            キャンセル
+                        </button>
+                    </form>
+                    
+                    <!-- バックアップコード表示 -->
+                    <div id="backupCodesDisplay" class="hidden mt-6">
+                        <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-4">
+                            <h4 class="font-bold text-yellow-400 mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                バックアップコードを保存
+                            </h4>
+                            <p class="text-xs text-gray-400">
+                                認証アプリにアクセスできない場合に使用できます。安全な場所に保存してください。
+                            </p>
+                        </div>
+                        
+                        <div id="backupCodesList" class="bg-gray-900/50 rounded-lg p-4 mb-4 font-mono text-sm"></div>
+                        
+                        <button onclick="copyBackupCodes()" class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-lg transition-colors">
+                            <i class="fas fa-copy mr-2"></i>
+                            コピー
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ログイン履歴画面 ★NEW -->
+    <div id="loginHistoryScreen" class="screen hidden">
+        <div class="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-900 via-gray-900 to-black safe-area-bottom">
+            <div class="w-full max-w-2xl mx-auto">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8 safe-area-top">
+                    <button onclick="showScreen('myPageScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-bold">ログイン履歴</h2>
+                        <p class="text-sm text-gray-400 mt-1">最新50件を表示</p>
+                    </div>
+                </div>
+                
+                <!-- 統計サマリー -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black" id="loginStatsTotal">0</p>
+                        <p class="text-xs text-gray-400">総ログイン</p>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black text-green-400" id="loginStatsSuccess">0</p>
+                        <p class="text-xs text-gray-400">成功</p>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black text-blue-400" id="loginStats2FA">0</p>
+                        <p class="text-xs text-gray-400">2段階認証</p>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black text-yellow-400" id="loginStatsSuspicious">0</p>
+                        <p class="text-xs text-gray-400">異常検知</p>
+                    </div>
+                </div>
+                
+                <!-- セキュリティアラート -->
+                <div id="securityAlert" class="hidden bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
+                    <h4 class="font-bold text-yellow-400 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        セキュリティアラート
+                    </h4>
+                    <p class="text-sm text-gray-400">
+                        異常なログインが検出されています。パスワードの変更や2段階認証の有効化を推奨します。
+                    </p>
+                </div>
+                
+                <!-- ログイン履歴リスト -->
+                <div id="loginHistoryList" class="space-y-3">
+                    <!-- JavaScriptで動的に生成 -->
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3"></i>
+                        <p>読み込み中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新規登録画面 ★NEW -->
+    <div id="registerScreen" class="screen hidden">
+        <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-purple-900 via-gray-900 to-black">
+            <div class="w-full max-w-md">
+                <!-- ヘッダー -->
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showScreen('loginScreen')" class="w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold">新規登録</h2>
+                </div>
+                
+                <!-- 登録フォーム -->
+                <form id="registerForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">ユーザー名 *</label>
+                        <input type="text" id="registerUsername" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="username" minlength="3">
+                        <p class="text-xs text-gray-500 mt-1">3文字以上の英数字</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">メールアドレス *</label>
+                        <input type="email" id="registerEmail" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="example@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">パスワード *</label>
+                        <input type="password" id="registerPassword" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="••••••••" minlength="8"
+                               oninput="checkPasswordStrength('registerPassword', 'registerPasswordStrength')">
+                        
+                        <!-- パスワード強度インジケーター ★NEW -->
+                        <div id="registerPasswordStrength" class="mt-3 hidden">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-400">パスワード強度</span>
+                                <span id="registerPasswordStrengthLabel" class="text-xs font-bold"></span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
+                                <div id="registerPasswordStrengthBar" class="h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="space-y-1 text-xs">
+                                <div id="registerReq1" class="flex items-center gap-2 text-gray-500">
+                                    <i class="fas fa-circle text-[8px]"></i>
+                                    <span>8文字以上</span>
+                                </div>
+                                <div id="registerReq2" class="flex items-center gap-2 text-gray-500">
+                                    <i class="fas fa-circle text-[8px]"></i>
+                                    <span>大文字を含む (A-Z)</span>
+                                </div>
+                                <div id="registerReq3" class="flex items-center gap-2 text-gray-500">
+                                    <i class="fas fa-circle text-[8px]"></i>
+                                    <span>小文字を含む (a-z)</span>
+                                </div>
+                                <div id="registerReq4" class="flex items-center gap-2 text-gray-500">
+                                    <i class="fas fa-circle text-[8px]"></i>
+                                    <span>数字を含む (0-9)</span>
+                                </div>
+                                <div id="registerReq5" class="flex items-center gap-2 text-gray-500">
+                                    <i class="fas fa-circle text-[8px]"></i>
+                                    <span>特殊文字を含む (!@#$%など) - 推奨</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">パスワード確認 *</label>
+                        <input type="password" id="registerPasswordConfirm" required 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white"
+                               placeholder="••••••••">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">紹介コード（任意）</label>
+                        <input type="text" id="registerReferralCode" 
+                               class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white uppercase"
+                               placeholder="PM12345678">
+                    </div>
+                    
+                    <!-- プロフィール拡張情報（任意）★NEW -->
+                    <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-4 mt-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-gift text-yellow-400 text-lg"></i>
+                            <h3 class="font-bold text-white">報酬10%アップのチャンス！</h3>
+                        </div>
+                        <p class="text-sm text-gray-300 mb-4">
+                            以下の情報を登録すると、<span class="text-yellow-400 font-bold">全案件の報酬が10%アップ</span>します！<br>
+                            <span class="text-xs text-gray-400">（後からマイページでも登録できます）</span>
+                        </p>
+                        
+                        <div class="space-y-3" id="extendedProfileSection">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">性別</label>
+                                <select id="registerGender" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="">選択してください</option>
+                                    <option value="男性">男性</option>
+                                    <option value="女性">女性</option>
+                                    <option value="その他">その他</option>
+                                    <option value="回答しない">回答しない</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">年代</label>
+                                <select id="registerAgeGroup" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="">選択してください</option>
+                                    <option value="10代">10代</option>
+                                    <option value="20代">20代</option>
+                                    <option value="30代">30代</option>
+                                    <option value="40代">40代</option>
+                                    <option value="50代">50代</option>
+                                    <option value="60代以上">60代以上</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">職業</label>
+                                <select id="registerOccupation" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="">選択してください</option>
+                                    <option value="会社員">会社員</option>
+                                    <option value="自営業">自営業</option>
+                                    <option value="公務員">公務員</option>
+                                    <option value="学生">学生</option>
+                                    <option value="主婦・主夫">主婦・主夫</option>
+                                    <option value="パート・アルバイト">パート・アルバイト</option>
+                                    <option value="無職">無職</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">お住まいの地域</label>
+                                <select id="registerPrefecture" class="w-full bg-gray-800/70 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="">選択してください</option>
+                                    <option value="北海道">北海道</option>
+                                    <option value="青森県">青森県</option>
+                                    <option value="岩手県">岩手県</option>
+                                    <option value="宮城県">宮城県</option>
+                                    <option value="秋田県">秋田県</option>
+                                    <option value="山形県">山形県</option>
+                                    <option value="福島県">福島県</option>
+                                    <option value="茨城県">茨城県</option>
+                                    <option value="栃木県">栃木県</option>
+                                    <option value="群馬県">群馬県</option>
+                                    <option value="埼玉県">埼玉県</option>
+                                    <option value="千葉県">千葉県</option>
+                                    <option value="東京都">東京都</option>
+                                    <option value="神奈川県">神奈川県</option>
+                                    <option value="新潟県">新潟県</option>
+                                    <option value="富山県">富山県</option>
+                                    <option value="石川県">石川県</option>
+                                    <option value="福井県">福井県</option>
+                                    <option value="山梨県">山梨県</option>
+                                    <option value="長野県">長野県</option>
+                                    <option value="岐阜県">岐阜県</option>
+                                    <option value="静岡県">静岡県</option>
+                                    <option value="愛知県">愛知県</option>
+                                    <option value="三重県">三重県</option>
+                                    <option value="滋賀県">滋賀県</option>
+                                    <option value="京都府">京都府</option>
+                                    <option value="大阪府">大阪府</option>
+                                    <option value="兵庫県">兵庫県</option>
+                                    <option value="奈良県">奈良県</option>
+                                    <option value="和歌山県">和歌山県</option>
+                                    <option value="鳥取県">鳥取県</option>
+                                    <option value="島根県">島根県</option>
+                                    <option value="岡山県">岡山県</option>
+                                    <option value="広島県">広島県</option>
+                                    <option value="山口県">山口県</option>
+                                    <option value="徳島県">徳島県</option>
+                                    <option value="香川県">香川県</option>
+                                    <option value="愛媛県">愛媛県</option>
+                                    <option value="高知県">高知県</option>
+                                    <option value="福岡県">福岡県</option>
+                                    <option value="佐賀県">佐賀県</option>
+                                    <option value="長崎県">長崎県</option>
+                                    <option value="熊本県">熊本県</option>
+                                    <option value="大分県">大分県</option>
+                                    <option value="宮崎県">宮崎県</option>
+                                    <option value="鹿児島県">鹿児島県</option>
+                                    <option value="沖縄県">沖縄県</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">興味関心（複数選択可）</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="ショッピング" class="interest-checkbox">
+                                        <span class="text-sm">ショッピング</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="旅行" class="interest-checkbox">
+                                        <span class="text-sm">旅行</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="グルメ" class="interest-checkbox">
+                                        <span class="text-sm">グルメ</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="美容・健康" class="interest-checkbox">
+                                        <span class="text-sm">美容・健康</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="スポーツ" class="interest-checkbox">
+                                        <span class="text-sm">スポーツ</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="エンタメ" class="interest-checkbox">
+                                        <span class="text-sm">エンタメ</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="ゲーム" class="interest-checkbox">
+                                        <span class="text-sm">ゲーム</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded cursor-pointer hover:bg-gray-800">
+                                        <input type="checkbox" value="金融・投資" class="interest-checkbox">
+                                        <span class="text-sm">金融・投資</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-2 mt-4">
+                        <input type="checkbox" id="registerAgree" required class="w-5 h-5 mt-1 rounded">
+                        <label for="registerAgree" class="text-sm text-gray-400">
+                            <span onclick="showScreen('termsScreen')" class="text-purple-400 cursor-pointer">利用規約</span>と
+                            <span onclick="showScreen('privacyScreen')" class="text-purple-400 cursor-pointer">プライバシーポリシー</span>に同意します
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-bold text-lg">
+                        登録する
+                    </button>
+                </form>
+                
+                <!-- ログインリンク -->
+                <div class="text-center mt-6">
+                    <p class="text-gray-400">
+                        既にアカウントをお持ちの方は
+                        <button onclick="showScreen('loginScreen')" class="text-purple-400 font-bold">
+                            ログイン
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ボトムナビゲーション -->
+    <nav class="bottom-nav">
+        <div class="flex justify-around">
+            <button class="bottom-nav-item active" data-screen="homeScreen">
+                <i class="fas fa-home"></i>
+                <span>ホーム</span>
+            </button>
+            <button class="bottom-nav-item" data-screen="searchScreen">
+                <i class="fas fa-search"></i>
+                <span>検索</span>
+            </button>
+            <button class="bottom-nav-item" data-screen="favoritesScreen">
+                <i class="fas fa-heart"></i>
+                <span>お気に入り</span>
+            </button>
+            <button class="bottom-nav-item" onclick="openExchangeModal()">
+                <i class="fas fa-exchange-alt"></i>
+                <span>交換</span>
+            </button>
+            <button class="bottom-nav-item" data-screen="myPageScreen">
+                <i class="fas fa-user"></i>
+                <span>マイページ</span>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- 案件詳細モーダル -->
+    <div id="caseModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="sticky top-0 bg-gray-900 p-4 flex items-center justify-between border-b border-gray-800">
+                <h3 class="text-lg font-bold" id="modalCaseTitle">案件詳細</h3>
+                <button onclick="closeCaseModal()" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div id="modalCaseContent">
+                    <!-- JavaScriptで動的生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 交換モーダル -->
+    <div id="exchangeModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="sticky top-0 bg-gray-900 p-4 flex items-center justify-between border-b border-gray-800">
+                <h3 class="text-lg font-bold">ポイント交換</h3>
+                <button onclick="closeExchangeModal()" class="w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button class="exchange-option-mobile stat-card p-4" data-type="現金" data-rate="1">
+                        <div class="text-center">
+                            <i class="fas fa-yen-sign text-3xl text-green-400 mb-2"></i>
+                            <p class="font-bold mb-1">現金</p>
+                            <p class="text-xs text-gray-400">1pt = 1円</p>
+                        </div>
+                    </button>
+                    <button class="exchange-option-mobile stat-card p-4" data-type="Amazonギフト券" data-rate="1.02">
+                        <div class="text-center">
+                            <i class="fab fa-amazon text-3xl text-orange-400 mb-2"></i>
+                            <p class="font-bold mb-1">Amazon</p>
+                            <p class="text-xs text-green-400">1pt = 1.02円</p>
+                        </div>
+                    </button>
+                    <button class="exchange-option-mobile stat-card p-4" data-type="楽天ポイント" data-rate="1">
+                        <div class="text-center">
+                            <i class="fas fa-shopping-cart text-3xl text-red-400 mb-2"></i>
+                            <p class="font-bold mb-1">楽天</p>
+                            <p class="text-xs text-gray-400">1pt = 1pt</p>
+                        </div>
+                    </button>
+                    <button class="exchange-option-mobile stat-card p-4" data-type="PayPay" data-rate="1">
+                        <div class="text-center">
+                            <i class="fas fa-mobile-alt text-3xl text-red-400 mb-2"></i>
+                            <p class="font-bold mb-1">PayPay</p>
+                            <p class="text-xs text-gray-400">1pt = 1円</p>
+                        </div>
+                    </button>
+                </div>
+                
+                <div id="exchangeForm" class="hidden">
+                    <div class="stat-card p-4 mb-4">
+                        <p class="text-sm text-gray-400 mb-2">交換先</p>
+                        <p id="selectedExchangeType" class="text-xl font-bold">現金</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm text-gray-400 mb-2">交換ポイント数</label>
+                        <input type="number" id="mobileExchangeAmount" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-lg" placeholder="100" min="100">
+                        <p class="text-sm text-gray-400 mt-2">交換後: ¥<span id="mobileExchangeValue">0</span></p>
+                    </div>
+                    
+                    <button id="confirmMobileExchange" class="w-full bg-purple-600 py-4 rounded-lg font-bold">
+                        交換する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- トースト通知 -->
+    <div id="toast" class="hidden fixed top-20 left-4 right-4 bg-gray-900 border border-gray-800 p-4 rounded-xl z-[3000] slide-up">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-check-circle text-2xl text-green-400"></i>
+            <p id="toastMessage" class="font-semibold flex-1"></p>
+        </div>
+    </div>
+    
+    <!-- アンケート回答モーダル -->
+    <div id="surveyAnswerModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-gray-900 pb-4 z-10">
+                <h3 id="surveyAnswerTitle" class="text-2xl font-bold"></h3>
+                <button onclick="closeSurveyAnswerModal()" class="text-2xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="surveyAnswerContent"></div>
+        </div>
+    </div>
+    
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- 拡張機能モジュール -->
+    <script src="js/extensions.js"></script>
+    
+    <!-- Firebase 設定 ★NEW -->
+    <script src="js/firebase-config.js"></script>
+    
+    <!-- 2段階認証・ログイン履歴 ★NEW -->
+    <script src="js/two-factor-auth.js"></script>
+    <script src="js/login-history.js"></script>
+    
+    <!-- メインアプリ -->
+    <script src="js/mobile.js"></script>
+    
+    <!-- 2段階認証・ログイン履歴統合 ★NEW -->
+    <script src="js/mobile-2fa-integration.js"></script>
+    
+    <!-- 管理者通知システム ★NEW -->
+    <script src="js/default-notification-templates.js"></script>
+    <script src="js/admin-notification-system.js"></script>
+    <script src="js/admin-notification-ui.js"></script>
+    
+<script src="js/survey-mobile.js"></script>
+</body>
+</html>
