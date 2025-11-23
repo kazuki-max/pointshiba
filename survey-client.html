@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アンケート依頼 - ポイしば for Business</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card-shadow:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .step-indicator {
+            position: relative;
+        }
+        
+        .step-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background: #e5e7eb;
+            transform: translateY(-50%);
+        }
+        
+        .step-indicator:last-child::after {
+            display: none;
+        }
+        
+        .step-indicator.active::after {
+            background: #667eea;
+        }
+        
+        .question-item {
+            border-left: 3px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .question-item:hover {
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center">
+                        <i class="fas fa-gem text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-900">ポイしば</h1>
+                        <p class="text-xs text-gray-500">for Business</p>
+                    </div>
+                </div>
+                
+                <nav class="hidden md:flex gap-6">
+                    <a href="#plans" class="text-gray-600 hover:text-purple-600 transition-colors">料金プラン</a>
+                    <a href="#features" class="text-gray-600 hover:text-purple-600 transition-colors">特徴</a>
+                    <a href="#faq" class="text-gray-600 hover:text-purple-600 transition-colors">よくある質問</a>
+                    <a href="mobile.html" class="text-gray-600 hover:text-purple-600 transition-colors">ユーザー向けサイト</a>
+                </nav>
+                
+                <a href="#form" class="gradient-bg text-white px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                    今すぐ依頼
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-5xl font-black mb-6">
+                    中間マージンゼロの<br>
+                    アンケート調査サービス
+                </h2>
+                <p class="text-xl mb-8 text-purple-100">
+                    ポイしばなら、仲介手数料なしで直接ユーザーにアンケートを実施できます。<br>
+                    高品質な回答を、業界最安値でご提供します。
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <a href="#form" class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+                        無料で見積もる
+                    </a>
+                    <a href="#plans" class="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                        料金を見る
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-8 mt-16">
+                    <div>
+                        <p class="text-4xl font-black mb-2">50,000+</p>
+                        <p class="text-purple-100">アクティブユーザー</p>
+                    </div>
+                    <div>
+                        <p class="text-4xl font-black mb-2">¥20/回答</p>
+                        <p class="text-purple-100">業界最安値</p>
+                    </div>
+                    <div>
+                        <p class="text-4xl font-black mb-2">24時間</p>
+                        <p class="text-purple-100">平均完了時間</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl font-black mb-4">ポイしばが選ばれる理由</h3>
+                <p class="text-gray-600">業界最高水準のアンケートプラットフォーム</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-dollar-sign text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">中間マージンゼロ</h4>
+                    <p class="text-gray-600">
+                        従来のアンケート会社のような高額な仲介手数料は一切不要。
+                        直接ユーザーに届けることで、コストを最大70%削減できます。
+                    </p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">高品質な回答者</h4>
+                    <p class="text-gray-600">
+                        厳格な本人確認済みの50,000人以上のアクティブユーザー。
+                        年齢・性別・地域などでターゲティングも可能です。
+                    </p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-line text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">リアルタイム分析</h4>
+                    <p class="text-gray-600">
+                        回答状況をリアルタイムで確認。グラフやチャートで
+                        視覚的に分析でき、CSV/Excelでのエクスポートも可能です。
+                    </p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">最短24時間で完了</h4>
+                    <p class="text-gray-600">
+                        大規模なユーザーベースにより、最短24時間で目標回答数を達成。
+                        急ぎの調査にも対応できます。
+                    </p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">安心のサポート</h4>
+                    <p class="text-gray-600">
+                        専任担当者がアンケート設計から結果分析まで完全サポート。
+                        初めての方でも安心してご利用いただけます。
+                    </p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="card-shadow p-8 rounded-xl bg-white text-center transition-all">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-lock text-3xl text-white"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">高セキュリティ</h4>
+                    <p class="text-gray-600">
+                        個人情報保護・データ暗号化に完全対応。
+                        Pマーク・ISMS認証取得で、安全性を保証します。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Plans -->
+    <section id="plans" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl font-black mb-4">シンプルな料金体系</h3>
+                <p class="text-gray-600 mb-8">質問数 × 回答数 × ¥10 = お見積り金額</p>
+                
+                <!-- 料金計算シミュレーター -->
+                <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mb-12">
+                    <h4 class="text-2xl font-bold mb-6">料金シミュレーター</h4>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-left text-sm font-medium text-gray-700 mb-2">質問数</label>
+                            <input type="number" id="simQuestions" value="10" min="1" max="100" 
+                                   onchange="calculateSimulation()"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl font-bold">
+                            <p class="text-xs text-gray-500 mt-1 text-left">最低1問から、上限なし</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-left text-sm font-medium text-gray-700 mb-2">回答数</label>
+                            <input type="number" id="simResponses" value="100" min="10" max="10000" 
+                                   onchange="calculateSimulation()"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl font-bold">
+                            <p class="text-xs text-gray-500 mt-1 text-left">最低10回答から、上限なし</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <p class="text-sm opacity-90 mb-1">お支払い総額</p>
+                                    <p class="text-4xl font-black" id="simTotal">¥10,000</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm opacity-90 mb-1">1回答あたり</p>
+                                    <p class="text-4xl font-black" id="simPerResponse">¥100</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-white/20">
+                                <p class="text-sm opacity-90 mb-1">ユーザー獲得ポイント（50%還元）</p>
+                                <p class="text-2xl font-bold" id="simUserPoints">50pt/回答</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mb-12">
+                <h4 class="text-2xl font-bold mb-4">参考価格例</h4>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-6">
+                <!-- Example 1 -->
+                <div class="card-shadow p-8 rounded-xl bg-white">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">簡単調査</h4>
+                        <p class="text-gray-600 text-sm">5問 × 100人</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <p class="text-5xl font-black text-purple-600">¥5,000</p>
+                        <p class="text-gray-600">総額</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">1回答: ¥50</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">ユーザー獲得: 25pt</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">CSV出力</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">リアルタイム集計</span>
+                        </li>
+                    </ul>
+                    <button onclick="setSimulation(5, 100)" class="w-full border-2 border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition-colors">
+                        この条件で作成
+                    </button>
+                </div>
+                
+                <!-- Example 2 - Popular -->
+                <div class="card-shadow p-8 rounded-xl bg-white border-2 border-purple-600 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold">人気</span>
+                    </div>
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">標準調査</h4>
+                        <p class="text-gray-600 text-sm">10問 × 500人</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <p class="text-5xl font-black text-purple-600">¥50,000</p>
+                        <p class="text-gray-600">総額</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">1回答: ¥100</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">ユーザー獲得: 50pt</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">詳細分析レポート</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">CSV/Excel出力</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">グラフ表示</span>
+                        </li>
+                    </ul>
+                    <button onclick="setSimulation(10, 500)" class="w-full gradient-bg text-white py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                        この条件で作成
+                    </button>
+                </div>
+                
+                <!-- Example 3 -->
+                <div class="card-shadow p-8 rounded-xl bg-white">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">詳細調査</h4>
+                        <p class="text-gray-600 text-sm">20問 × 500人</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <p class="text-5xl font-black text-purple-600">¥100,000</p>
+                        <p class="text-gray-600">総額</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">1回答: ¥200</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">ユーザー獲得: 100pt</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">高度な分析</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">全形式出力</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">優先サポート</span>
+                        </li>
+                    </ul>
+                    <button onclick="setSimulation(20, 500)" class="w-full border-2 border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition-colors">
+                        この条件で作成
+                    </button>
+                </div>
+                
+                <!-- Example 4 -->
+                <div class="card-shadow p-8 rounded-xl bg-white">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">大規模調査</h4>
+                        <p class="text-gray-600 text-sm">30問 × 1,000人</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <p class="text-5xl font-black text-purple-600">¥300,000</p>
+                        <p class="text-gray-600">総額</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">1回答: ¥300</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">ユーザー獲得: 150pt</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">カスタム分析</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">API連携</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="text-sm">専任サポート</span>
+                        </li>
+                    </ul>
+                    <button onclick="setSimulation(30, 1000)" class="w-full border-2 border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition-colors">
+                        この条件で作成
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 max-w-3xl mx-auto">
+                    <h5 class="font-bold text-blue-900 mb-3">💡 料金の仕組み</h5>
+                    <div class="text-left text-sm text-blue-800 space-y-2">
+                        <p><strong>✅ 1問あたり¥10の明確な料金体系</strong></p>
+                        <p>• 料金 = 質問数 × 回答数 × ¥10</p>
+                        <p>• ユーザーには50%還元（例: 10問なら50pt/回答）</p>
+                        <p>• 最低料金: ¥1,000〜（1問 × 100回答）</p>
+                        <p>• 上限なし: 質問数・回答数ともに自由設定</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 mt-4 text-sm">※ 料金は全て税抜表示です</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Survey Form -->
+    <section id="form" class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-black mb-4">アンケート依頼フォーム</h3>
+                <p class="text-gray-600">以下の情報を入力してください。担当者より24時間以内にご連絡いたします。</p>
+            </div>
+            
+            <!-- Step Indicator -->
+            <div class="flex justify-between mb-12 relative">
+                <div class="step-indicator active flex-1 text-center relative z-10">
+                    <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-white font-bold">1</span>
+                    </div>
+                    <p class="text-sm font-medium">基本情報</p>
+                </div>
+                <div class="step-indicator flex-1 text-center relative z-10" id="step2Indicator">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-gray-600 font-bold">2</span>
+                    </div>
+                    <p class="text-sm text-gray-600">アンケート詳細</p>
+                </div>
+                <div class="step-indicator flex-1 text-center relative z-10" id="step3Indicator">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-gray-600 font-bold">3</span>
+                    </div>
+                    <p class="text-sm text-gray-600">質問設定</p>
+                </div>
+                <div class="step-indicator flex-1 text-center relative z-10" id="step4Indicator">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-gray-600 font-bold">4</span>
+                    </div>
+                    <p class="text-sm text-gray-600">確認・送信</p>
+                </div>
+            </div>
+            
+            <form id="surveyForm" class="card-shadow p-8 rounded-xl bg-white">
+                <!-- Step 1: Basic Info -->
+                <div id="step1" class="space-y-6">
+                    <h4 class="text-2xl font-bold mb-6">基本情報</h4>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">企業名 *</label>
+                            <input type="text" id="clientCompany" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="株式会社〇〇">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ご担当者名 *</label>
+                            <input type="text" id="clientName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="山田 太郎">
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">メールアドレス *</label>
+                            <input type="email" id="clientEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="example@company.com">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">電話番号 *</label>
+                            <input type="tel" id="clientPhone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="03-1234-5678">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h5 class="font-bold text-purple-900 mb-2">💰 料金体系</h5>
+                        <p class="text-sm text-purple-800">
+                            <strong>1問あたり¥10の明確な料金</strong><br>
+                            質問数 × 回答数 × ¥10 = お見積り総額<br>
+                            ユーザーには50%還元されます
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="button" onclick="goToStep(2)" class="gradient-bg text-white px-8 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                            次へ <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Survey Details -->
+                <div id="step2" class="space-y-6 hidden">
+                    <h4 class="text-2xl font-bold mb-6">アンケート詳細</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">アンケートタイトル *</label>
+                        <input type="text" id="surveyTitle" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="新商品に関するアンケート">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">アンケート説明 *</label>
+                        <textarea id="surveyDescription" required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="このアンケートの目的や内容について簡単に説明してください。"></textarea>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">目標回答数 *</label>
+                            <input type="number" id="targetResponses" required min="10" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="100">
+                            <p class="text-xs text-gray-500 mt-1">最低10回答から</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">1回答あたりのポイント *</label>
+                            <input type="number" id="pointsPerResponse" required min="5" readonly class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="自動計算">
+                            <p class="text-xs text-purple-600 mt-1">
+                                <i class="fas fa-info-circle"></i> 自動計算: 質問数 × ¥10 ÷ 2 = ユーザー獲得ポイント
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">カテゴリー *</label>
+                            <select id="surveyCategory" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                <option value="">選択してください</option>
+                                <option value="商品・サービス">商品・サービス</option>
+                                <option value="マーケティング">マーケティング</option>
+                                <option value="顧客満足度">顧客満足度</option>
+                                <option value="ブランディング">ブランディング</option>
+                                <option value="市場調査">市場調査</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">所要時間（目安） *</label>
+                            <select id="estimatedTime" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                                <option value="">選択してください</option>
+                                <option value="1-3分">1-3分</option>
+                                <option value="3-5分">3-5分</option>
+                                <option value="5-10分">5-10分</option>
+                                <option value="10-15分">10-15分</option>
+                                <option value="15分以上">15分以上</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">開始日 *</label>
+                            <input type="date" id="startDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">終了日 *</label>
+                            <input type="date" id="endDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">サムネイル画像（任意）</label>
+                        <input type="file" id="surveyImageFile" accept="image/*" class="hidden" onchange="handleSurveyImageUpload(event)">
+                        <button type="button" onclick="document.getElementById('surveyImageFile').click()" class="w-full border-2 border-dashed border-gray-300 rounded-lg px-4 py-8 text-center hover:border-purple-600 transition-colors">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">クリックして画像をアップロード</p>
+                            <p class="text-xs text-gray-500 mt-1">最大5MB、JPEG/PNG/GIF</p>
+                        </button>
+                        <div id="surveyImagePreview" class="mt-4 hidden">
+                            <img id="surveyImagePreviewImg" src="" alt="プレビュー" class="w-full h-48 object-cover rounded-lg">
+                            <button type="button" onclick="clearSurveyImage()" class="mt-2 text-red-600 text-sm hover:underline">
+                                <i class="fas fa-times mr-1"></i> 画像を削除
+                            </button>
+                        </div>
+                        <input type="hidden" id="surveyImageData" value="">
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="goToStep(1)" class="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> 戻る
+                        </button>
+                        <button type="button" onclick="goToStep(3)" class="gradient-bg text-white px-8 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                            次へ <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Questions -->
+                <div id="step3" class="space-y-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-2xl font-bold">質問設定</h4>
+                        <button type="button" onclick="addQuestion()" class="gradient-bg text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                            <i class="fas fa-plus mr-2"></i> 質問を追加
+                        </button>
+                    </div>
+                    
+                    <div id="questionsList" class="space-y-4">
+                        <!-- Questions will be added here dynamically -->
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>ヒント:</strong> 質問は最低1問、最大30問まで設定できます。質問の種類は単一選択、複数選択、自由記述、評価、Yes/Noから選べます。
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="goToStep(2)" class="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> 戻る
+                        </button>
+                        <button type="button" onclick="goToStep(4)" class="gradient-bg text-white px-8 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                            次へ <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Confirmation -->
+                <div id="step4" class="space-y-6 hidden">
+                    <h4 class="text-2xl font-bold mb-6">確認・送信</h4>
+                    
+                    <div id="confirmationContent" class="space-y-6">
+                        <!-- Confirmation details will be shown here -->
+                    </div>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p class="text-sm text-yellow-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>ご注意:</strong> 送信後、担当者が内容を確認し、24時間以内にお見積りとお支払い方法をご連絡いたします。お支払い確認後、アンケートが公開されます。
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                        <input type="checkbox" id="agreeTerms" class="mt-1">
+                        <label for="agreeTerms" class="text-sm text-gray-700">
+                            <a href="#" class="text-purple-600 hover:underline">利用規約</a>および<a href="#" class="text-purple-600 hover:underline">プライバシーポリシー</a>に同意します
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="goToStep(3)" class="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> 戻る
+                        </button>
+                        <button type="button" onclick="submitSurveyOrder()" class="gradient-bg text-white px-8 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                            <i class="fas fa-paper-plane mr-2"></i> 送信する
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-20 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl font-black mb-4">よくある質問</h3>
+            </div>
+            
+            <div class="space-y-4">
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. 支払い方法は何がありますか？</summary>
+                    <p class="text-gray-600 mt-3">A. 銀行振込、クレジットカード決済、請求書払い（法人のみ）に対応しています。</p>
+                </details>
+                
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. いつから回答が集まり始めますか？</summary>
+                    <p class="text-gray-600 mt-3">A. お支払い確認後、即座にアンケートが公開され、回答が集まり始めます。平均24時間で目標回答数の50%以上が達成されます。</p>
+                </details>
+                
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. 回答の質は保証されますか？</summary>
+                    <p class="text-gray-600 mt-3">A. はい。本人確認済みユーザーのみが回答でき、不正回答は自動検知システムで除外されます。万が一、不正回答があった場合は追加で回答を集めます。</p>
+                </details>
+                
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. ターゲティングは可能ですか？</summary>
+                    <p class="text-gray-600 mt-3">A. スタンダードプラン以上で、年齢・性別・地域・職業などの基本ターゲティングが可能です。プレミアムプラン以上では、より詳細な条件設定ができます。</p>
+                </details>
+                
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. キャンセルは可能ですか？</summary>
+                    <p class="text-gray-600 mt-3">A. アンケート公開前であればキャンセル可能です（手数料10%）。公開後のキャンセルは、既に集まった回答分の費用をお支払いいただきます。</p>
+                </details>
+                
+                <details class="card-shadow p-6 rounded-xl bg-white">
+                    <summary class="font-bold cursor-pointer">Q. データのエクスポート形式は？</summary>
+                    <p class="text-gray-600 mt-3">A. CSV、Excel、JSON形式でのエクスポートが可能です。グラフや集計結果を含むPDFレポートも自動生成されます。</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 class="text-4xl font-black mb-6">今すぐ始めましょう</h3>
+            <p class="text-xl mb-8 text-purple-100">
+                高品質な市場調査を、業界最安値で。<br>
+                無料見積もりは24時間以内にお届けします。
+            </p>
+            <a href="#form" class="inline-block bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+                無料で見積もる <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h5 class="font-bold mb-4">ポイしば</h5>
+                    <p class="text-gray-400 text-sm">中間マージンゼロの次世代アンケートプラットフォーム</p>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-4">サービス</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#plans" class="hover:text-white">料金プラン</a></li>
+                        <li><a href="#features" class="hover:text-white">特徴</a></li>
+                        <li><a href="#faq" class="hover:text-white">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-4">企業情報</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">会社概要</a></li>
+                        <li><a href="#" class="hover:text-white">お問い合わせ</a></li>
+                        <li><a href="#" class="hover:text-white">採用情報</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-4">法的情報</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">利用規約</a></li>
+                        <li><a href="#" class="hover:text-white">プライバシーポリシー</a></li>
+                        <li><a href="#" class="hover:text-white">特定商取引法</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 ポイしば. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-8 right-8 bg-white shadow-lg rounded-lg p-4 max-w-sm z-50">
+        <div class="flex items-center gap-3">
+            <i id="toastIcon" class="fas fa-check-circle text-2xl"></i>
+            <p id="toastMessage" class="font-medium"></p>
+        </div>
+    </div>
+
+    <script src="js/survey-client.js"></script>
+</body>
+</html>
