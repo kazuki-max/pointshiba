@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PointMax - モッピーを超える最高のポイントサイト</title>
+    <meta name="description" content="PointMaxは業界最高還元率のポイントサイト。ショッピング、ゲーム、アンケートで簡単にポイントを貯めて、現金やギフト券に交換できます。">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        
+        .shine-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            transition: transform 0.6s;
+        }
+        
+        .shine-effect:hover::before {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+        
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+        
+        .rank-bronze {
+            background: linear-gradient(135deg, #cd7f32 0%, #8b5a00 100%);
+            color: white;
+        }
+        
+        .rank-silver {
+            background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+            color: white;
+        }
+        
+        .rank-gold {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            color: #333;
+        }
+        
+        .rank-platinum {
+            background: linear-gradient(135deg, #e5e4e2 0%, #b5b5b5 100%);
+            color: #333;
+        }
+        
+        .rank-diamond {
+            background: linear-gradient(135deg, #b9f2ff 0%, #0088ff 100%);
+            color: white;
+        }
+        
+        .tab-button {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 9999px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- ヘッダー -->
+    <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-gem text-3xl"></i>
+                    <h1 class="text-2xl font-black">PointMax</h1>
+                </div>
+                
+                <nav class="hidden md:flex items-center gap-6">
+                    <a href="#home" class="hover:text-purple-200 transition">ホーム</a>
+                    <a href="#cases" class="hover:text-purple-200 transition">ポイント案件</a>
+                    <a href="#exchange" class="hover:text-purple-200 transition">ポイント交換</a>
+                    <a href="#ranking" class="hover:text-purple-200 transition">ランキング</a>
+                </nav>
+                
+                <div class="flex items-center gap-4">
+                    <button id="loginBtn" class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold hover:bg-purple-50 transition">
+                        ログイン
+                    </button>
+                    <button class="md:hidden text-white text-2xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main>
+        <!-- ユーザーダッシュボード -->
+        <section id="dashboard" class="hidden">
+            <div class="gradient-bg text-white py-8">
+                <div class="container mx-auto px-4">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-20 h-20 rounded-full bg-white flex items-center justify-center">
+                                <i class="fas fa-user text-4xl text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h2 id="userName" class="text-2xl font-bold">ゲストユーザー</h2>
+                                <div id="userRank" class="rank-badge rank-bronze mt-2">
+                                    <i class="fas fa-medal"></i>
+                                    <span>ブロンズ会員</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
+                            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center">
+                                <p class="text-sm opacity-90">保有ポイント</p>
+                                <p id="totalPoints" class="text-3xl font-black">0</p>
+                                <p class="text-xs opacity-75">≈ ¥<span id="totalPointsYen">0</span></p>
+                            </div>
+                            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center">
+                                <p class="text-sm opacity-90">ランクポイント</p>
+                                <p id="rankPoints" class="text-3xl font-black">0</p>
+                                <p class="text-xs opacity-75">次のランクまで <span id="nextRankPoints">1000</span>pt</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- デイリーログインボーナス -->
+                    <div class="mt-6 bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <i class="fas fa-calendar-check"></i>
+                                デイリーログインボーナス
+                            </h3>
+                            <button id="claimDailyBtn" class="bg-yellow-400 text-purple-900 px-6 py-2 rounded-full font-bold hover:bg-yellow-300 transition shine-effect">
+                                受け取る
+                            </button>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto pb-2">
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 1</p>
+                                <p class="font-bold">10pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 2</p>
+                                <p class="font-bold">20pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 3</p>
+                                <p class="font-bold">30pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 4</p>
+                                <p class="font-bold">50pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 5</p>
+                                <p class="font-bold">100pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 6</p>
+                                <p class="font-bold">150pt</p>
+                            </div>
+                            <div class="daily-day bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
+                                <p class="text-xs mb-1">Day 7</p>
+                                <p class="font-bold text-yellow-300">500pt!</p>
+                            </div>
+                        </div>
+                        <p class="text-sm mt-3 opacity-90">連続ログイン: <span id="consecutiveDays" class="font-bold">0</span>日</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- タブナビゲーション -->
+            <div class="container mx-auto px-4 mt-8">
+                <div class="flex gap-1 border-b-2 border-gray-200 overflow-x-auto">
+                    <button class="tab-button active px-6 py-3 font-bold whitespace-nowrap" data-tab="cases">
+                        <i class="fas fa-tasks mr-2"></i>ポイント案件
+                    </button>
+                    <button class="tab-button px-6 py-3 font-bold whitespace-nowrap" data-tab="history">
+                        <i class="fas fa-history mr-2"></i>ポイント履歴
+                    </button>
+                    <button class="tab-button px-6 py-3 font-bold whitespace-nowrap" data-tab="exchange">
+                        <i class="fas fa-exchange-alt mr-2"></i>ポイント交換
+                    </button>
+                    <button class="tab-button px-6 py-3 font-bold whitespace-nowrap" data-tab="achievements">
+                        <i class="fas fa-trophy mr-2"></i>実績
+                    </button>
+                    <button class="tab-button px-6 py-3 font-bold whitespace-nowrap" data-tab="stats">
+                        <i class="fas fa-chart-line mr-2"></i>統計
+                    </button>
+                </div>
+            </div>
+
+            <!-- タブコンテンツ -->
+            <div class="container mx-auto px-4 py-8">
+                <!-- ポイント案件タブ -->
+                <div id="casesTab" class="tab-content">
+                    <!-- フィルター -->
+                    <div class="mb-6 flex flex-wrap gap-3">
+                        <button class="filter-btn active bg-purple-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-purple-700 transition" data-category="全て">
+                            全て
+                        </button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-gray-300 transition" data-category="クレジットカード">
+                            クレジットカード
+                        </button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-gray-300 transition" data-category="口座開設">
+                            口座開設
+                        </button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-gray-300 transition" data-category="ショッピング">
+                            ショッピング
+                        </button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-gray-300 transition" data-category="アンケート">
+                            アンケート
+                        </button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-gray-300 transition" data-category="ゲーム">
+                            ゲーム
+                        </button>
+                    </div>
+                    
+                    <!-- 案件リスト -->
+                    <div id="casesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+
+                <!-- ポイント履歴タブ -->
+                <div id="historyTab" class="tab-content hidden">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <i class="fas fa-history text-purple-600"></i>
+                            ポイント獲得履歴
+                        </h3>
+                        <div id="historyList" class="space-y-4">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ポイント交換タブ -->
+                <div id="exchangeTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- 交換先オプション -->
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="現金" data-rate="1">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-yen-sign text-3xl text-green-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">現金</h4>
+                                <p class="text-gray-600 mb-3">銀行振込</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1円</p>
+                                <p class="text-sm text-gray-500 mt-2">最低交換: 500pt</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="Amazonギフト券" data-rate="1.02">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fab fa-amazon text-3xl text-orange-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">Amazonギフト券</h4>
+                                <p class="text-gray-600 mb-3">即時発行</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1.02円</p>
+                                <p class="text-sm text-green-600 mt-2 font-semibold">+2%お得!</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="楽天ポイント" data-rate="1">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-shopping-cart text-3xl text-red-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">楽天ポイント</h4>
+                                <p class="text-gray-600 mb-3">リアルタイム交換</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1pt</p>
+                                <p class="text-sm text-gray-500 mt-2">最低交換: 100pt</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="PayPay" data-rate="1">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-mobile-alt text-3xl text-red-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">PayPay</h4>
+                                <p class="text-gray-600 mb-3">即座にチャージ</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1円</p>
+                                <p class="text-sm text-gray-500 mt-2">最低交換: 100pt</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="dポイント" data-rate="1">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-coins text-3xl text-orange-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">dポイント</h4>
+                                <p class="text-gray-600 mb-3">リアルタイム交換</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1pt</p>
+                                <p class="text-sm text-gray-500 mt-2">最低交換: 100pt</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover cursor-pointer exchange-option" data-type="Tポイント" data-rate="1">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-ticket-alt text-3xl text-yellow-600"></i>
+                                </div>
+                                <h4 class="text-xl font-bold mb-2">Tポイント</h4>
+                                <p class="text-gray-600 mb-3">リアルタイム交換</p>
+                                <p class="text-2xl font-black text-purple-600">1pt = 1pt</p>
+                                <p class="text-sm text-gray-500 mt-2">最低交換: 100pt</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 交換履歴 -->
+                    <div class="mt-8 bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <i class="fas fa-receipt text-purple-600"></i>
+                            交換履歴
+                        </h3>
+                        <div id="exchangeHistoryList" class="space-y-4">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 実績タブ -->
+                <div id="achievementsTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="achievementsList">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+
+                <!-- 統計タブ -->
+                <div id="statsTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-4">ポイント獲得推移（30日間）</h3>
+                            <div style="height: 300px;">
+                                <canvas id="pointsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-4">カテゴリー別獲得ポイント</h3>
+                            <div style="height: 300px;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-4">月別統計</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
+                                    <span class="font-semibold">今月の獲得ポイント</span>
+                                    <span class="text-2xl font-black text-purple-600" id="monthlyPoints">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-green-50 rounded-xl">
+                                    <span class="font-semibold">完了した案件</span>
+                                    <span class="text-2xl font-black text-green-600" id="completedCases">0</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                                    <span class="font-semibold">連続ログイン日数</span>
+                                    <span class="text-2xl font-black text-blue-600" id="loginStreak">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-4">ランクアップ進捗</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="font-semibold">現在のランク</span>
+                                        <span id="currentRankText" class="font-bold text-purple-600">ブロンズ</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-4">
+                                        <div id="rankProgressBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-4 rounded-full transition-all" style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-2">次のランクまで: <span id="remainingRankPoints" class="font-bold">1000</span>pt</p>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <h4 class="font-bold mb-3">ランク別特典</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-medal text-amber-700"></i>
+                                            <span>ブロンズ: 基本還元率 1.0倍</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-medal text-gray-400"></i>
+                                            <span>シルバー: 基本還元率 1.1倍</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-medal text-yellow-400"></i>
+                                            <span>ゴールド: 基本還元率 1.2倍</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-medal text-gray-300"></i>
+                                            <span>プラチナ: 基本還元率 1.3倍</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-gem text-blue-400"></i>
+                                            <span>ダイヤモンド: 基本還元率 1.5倍</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ランディングページ（未ログイン時） -->
+        <section id="landing" class="">
+            <!-- ヒーローセクション -->
+            <div class="gradient-bg text-white py-20">
+                <div class="container mx-auto px-4 text-center">
+                    <h2 class="text-5xl md:text-6xl font-black mb-6 leading-tight">
+                        日本最高還元率の<br>ポイントサイト
+                    </h2>
+                    <p class="text-xl md:text-2xl mb-8 opacity-90">
+                        ショッピング、ゲーム、アンケートで簡単にポイントを貯めて<br>
+                        現金やギフト券に交換できます
+                    </p>
+                    <button id="startBtn" class="bg-white text-purple-600 px-10 py-4 rounded-full text-xl font-black hover:bg-purple-50 transition shine-effect">
+                        無料で始める <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    
+                    <div class="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto">
+                        <div>
+                            <p class="text-4xl font-black mb-2">1.5倍</p>
+                            <p class="opacity-90">業界最高還元率</p>
+                        </div>
+                        <div>
+                            <p class="text-4xl font-black mb-2">即時</p>
+                            <p class="opacity-90">リアルタイム交換</p>
+                        </div>
+                        <div>
+                            <p class="text-4xl font-black mb-2">100pt</p>
+                            <p class="opacity-90">最低交換額</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 特徴セクション -->
+            <div class="py-20 bg-white">
+                <div class="container mx-auto px-4">
+                    <h3 class="text-4xl font-black text-center mb-16 gradient-text">PointMaxの特徴</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="text-center p-8 rounded-2xl hover:bg-gray-50 transition">
+                            <div class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-bolt text-4xl text-white"></i>
+                            </div>
+                            <h4 class="text-2xl font-bold mb-4">リアルタイム交換</h4>
+                            <p class="text-gray-600 leading-relaxed">
+                                ポイント交換は最短即時。待ち時間なしで現金やギフト券に交換できます。
+                            </p>
+                        </div>
+                        
+                        <div class="text-center p-8 rounded-2xl hover:bg-gray-50 transition">
+                            <div class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-trophy text-4xl text-white"></i>
+                            </div>
+                            <h4 class="text-2xl font-bold mb-4">ランクシステム</h4>
+                            <p class="text-gray-600 leading-relaxed">
+                                利用するほどランクアップ！最大1.5倍の還元率でさらにお得に。
+                            </p>
+                        </div>
+                        
+                        <div class="text-center p-8 rounded-2xl hover:bg-gray-50 transition">
+                            <div class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-gift text-4xl text-white"></i>
+                            </div>
+                            <h4 class="text-2xl font-bold mb-4">デイリーボーナス</h4>
+                            <p class="text-gray-600 leading-relaxed">
+                                毎日ログインするだけでポイントGET！7日連続で500ポイント獲得。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- おすすめ案件プレビュー -->
+            <div class="py-20 bg-gray-50">
+                <div class="container mx-auto px-4">
+                    <h3 class="text-4xl font-black text-center mb-4 gradient-text">人気のポイント案件</h3>
+                    <p class="text-center text-gray-600 mb-12">今すぐ始められる高額案件</p>
+                    
+                    <div id="featuredCases" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                    
+                    <div class="text-center mt-12">
+                        <button id="viewAllCasesBtn" class="bg-purple-600 text-white px-8 py-3 rounded-full font-bold hover:bg-purple-700 transition">
+                            すべての案件を見る <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-gem text-2xl"></i>
+                        <h3 class="text-xl font-black">PointMax</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        日本最高還元率のポイントサイト。<br>
+                        簡単・安全・お得にポイントを貯めよう。
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">サービス</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">ポイント案件</a></li>
+                        <li><a href="#" class="hover:text-white transition">ポイント交換</a></li>
+                        <li><a href="#" class="hover:text-white transition">ランキング</a></li>
+                        <li><a href="#" class="hover:text-white transition">友達紹介</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">サポート</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">ヘルプセンター</a></li>
+                        <li><a href="#" class="hover:text-white transition">よくある質問</a></li>
+                        <li><a href="#" class="hover:text-white transition">お問い合わせ</a></li>
+                        <li><a href="#" class="hover:text-white transition">利用規約</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">フォロー</h4>
+                    <div class="flex gap-4 text-2xl">
+                        <a href="#" class="hover:text-purple-400 transition"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="hover:text-purple-400 transition"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="hover:text-purple-400 transition"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="hover:text-purple-400 transition"><i class="fab fa-line"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+                <p>&copy; 2024 PointMax. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- モーダル: ポイント交換 -->
+    <div id="exchangeModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <h3 class="text-2xl font-bold mb-6">ポイント交換</h3>
+            <div class="mb-6">
+                <p class="text-gray-600 mb-2">交換先</p>
+                <p id="modalExchangeType" class="text-xl font-bold">現金</p>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-600 mb-2">交換ポイント数</label>
+                <input type="number" id="exchangeAmount" class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-600 outline-none" placeholder="100" min="100">
+                <p class="text-sm text-gray-500 mt-2">
+                    交換後の価値: <span id="exchangeValue" class="font-bold text-purple-600">¥0</span>
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirmExchangeBtn" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition">
+                    交換する
+                </button>
+                <button id="cancelExchangeBtn" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">
+                    キャンセル
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知トースト -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-4 rounded-xl shadow-2xl z-50 max-w-sm">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-check-circle text-2xl text-green-400"></i>
+            <p id="toastMessage" class="font-semibold"></p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
