@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ - PointMax</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-gem text-3xl"></i>
+                    <h1 class="text-2xl font-black">PointMax</h1>
+                </div>
+                <a href="index.html" class="hover:text-purple-200 transition">ホームへ戻る</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-12 max-w-2xl">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-envelope text-4xl text-white"></i>
+            </div>
+            <h1 class="text-4xl font-black mb-4">お問い合わせ</h1>
+            <p class="text-gray-600">ご質問・ご意見・ご要望などがございましたら、<br>お気軽にお問い合わせください。</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <form id="contactForm" class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">お名前 <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" required
+                           class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-600 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">メールアドレス <span class="text-red-500">*</span></label>
+                    <input type="email" id="email" required
+                           class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-600 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">お問い合わせ種別 <span class="text-red-500">*</span></label>
+                    <select id="category" required
+                            class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-600 outline-none transition">
+                        <option value="">選択してください</option>
+                        <option value="ポイント獲得について">ポイント獲得について</option>
+                        <option value="ポイント交換について">ポイント交換について</option>
+                        <option value="アカウントについて">アカウントについて</option>
+                        <option value="不具合・エラー">不具合・エラー</option>
+                        <option value="友達紹介について">友達紹介について</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">お問い合わせ内容 <span class="text-red-500">*</span></label>
+                    <textarea id="message" required rows="8"
+                              class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-600 outline-none transition resize-none"
+                              placeholder="できるだけ詳しくご記入ください"></textarea>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        お問い合わせ内容により、回答までに数日かかる場合がございます。<br>
+                        営業時間: 平日 10:00〜18:00（土日祝除く）
+                    </p>
+                </div>
+
+                <button type="submit" 
+                        class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                    <i class="fas fa-paper-plane mr-2"></i>送信する
+                </button>
+            </form>
+        </div>
+
+        <!-- よくある質問 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold mb-4">お問い合わせ前にご確認ください</h2>
+            <p class="text-gray-600 mb-4">よくある質問で解決できるかもしれません。</p>
+            <a href="help.html" class="inline-flex items-center gap-2 text-purple-600 font-bold hover:underline">
+                <i class="fas fa-question-circle"></i>
+                よくある質問を見る
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <i class="fas fa-gem text-2xl"></i>
+                <h3 class="text-xl font-black">PointMax</h3>
+            </div>
+            <p class="text-gray-400 text-sm">&copy; 2024 PointMax. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-4xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-4">送信完了</h3>
+            <p class="text-gray-600 mb-6">
+                お問い合わせありがとうございます。<br>
+                内容を確認の上、メールにて回答いたします。
+            </p>
+            <button onclick="closeModal()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-purple-700 transition">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                category: document.getElementById('category').value,
+                message: document.getElementById('message').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            // デモ版: コンソールに出力
+            console.log('お問い合わせ内容:', formData);
+            
+            // 実際にはAPIに送信
+            // await fetch('/api/contact', {
+            //     method: 'POST',
+            //     headers: {'Content-Type': 'application/json'},
+            //     body: JSON.stringify(formData)
+            // });
+            
+            // 成功モーダル表示
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // フォームリセット
+            document.getElementById('contactForm').reset();
+        });
+        
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
