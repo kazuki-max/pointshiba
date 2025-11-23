@@ -38,11 +38,26 @@
 
 ### ✅ 完全実装済み（全25機能）
 
-**🆕 LINE統合計画:**
+**🆕 最新アップデート:**
+- ✅ **Supabase統合** - PostgreSQLデータベース実装
+- ✅ **Netlifyデプロイ** - 自動デプロイ設定完了
 - 📋 計画策定完了
 - 📝 `NETLIFY_DEPLOY_GUIDE.md` - デプロイ手順
 - 📝 `LINE_LIFF_ROADMAP.md` - LIFF統合ロードマップ
+- 📝 `SUPABASE_SETUP_COMPLETE.md` - データベースセットアップ完全ガイド
 - 🎯 まずNetlifyにデプロイ → その後段階的にLIFF統合
+
+---
+
+## 💾 **データベース**
+
+### **Supabase (PostgreSQL)**
+- 8つのテーブル実装
+- Row Level Security (RLS) 有効
+- リアルタイムデータ同期
+- 無料枠で500MB
+
+詳細: `DATABASE_SETUP.md` と `SUPABASE_SETUP_COMPLETE.md` を参照
 
 ---
 
